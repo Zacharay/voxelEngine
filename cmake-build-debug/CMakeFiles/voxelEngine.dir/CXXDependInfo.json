@@ -1,0 +1,18 @@
+{
+	"bmi-installation" : null,
+	"compiler-frontend-variant" : "GNU",
+	"compiler-id" : "GNU",
+	"compiler-simulate-id" : "",
+	"config" : "Debug",
+	"cxx-modules" : {},
+	"dir-cur-bld" : "/home/zachary/cppProjects/voxelEngine/cmake-build-debug",
+	"dir-cur-src" : "/home/zachary/cppProjects/voxelEngine",
+	"dir-top-bld" : "/home/zachary/cppProjects/voxelEngine/cmake-build-debug",
+	"dir-top-src" : "/home/zachary/cppProjects/voxelEngine",
+	"exports" : [],
+	"forward-modules-from-target-dirs" : [],
+	"include-dirs" : [],
+	"language" : "CXX",
+	"linked-target-dirs" : [],
+	"module-dir" : "/home/zachary/cppProjects/voxelEngine/cmake-build-debug/CMakeFiles/voxelEngine.dir"
+}

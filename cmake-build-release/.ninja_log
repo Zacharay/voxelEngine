@@ -1,0 +1,6 @@
+# ninja log v6
+1	10	1724430551407447174	CMakeFiles/voxelEngine.dir/src/Application.cpp.o	ff746c946be9c3f1
+1	14	1724430551407447174	CMakeFiles/voxelEngine.dir/src/main.cpp.o	250069918262b791
+1	152	1724430551407447174	CMakeFiles/voxelEngine.dir/src/glad.c.o	7a5b5371d22d320f
+1	166	1724430551407447174	CMakeFiles/voxelEngine.dir/src/Window.cpp.o	1d8da1fb1dcfd0f5
+166	209	1724430551572449462	voxelEngine	568436ed8e73e616
