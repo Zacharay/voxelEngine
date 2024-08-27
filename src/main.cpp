@@ -1,7 +1,8 @@
 #include "Application.hpp"
-
+#include  "Window.hpp"
 int main(){
-    return 0;
-    Application app;
 
+    Application app;
+    app.run();
+    return 0;
 }

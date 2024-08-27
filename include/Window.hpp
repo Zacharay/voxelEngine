@@ -1,20 +1,17 @@
-#include <glad/glad.h>
-#include <GLFW/glfw3.h>
-
 #pragma once
-
-
+#include "glad/glad.h"
+#include <GLFW/glfw3.h>
 class Window  {
 private:
     GLFWwindow *m_window;
-    ~Window();
+
 public:
     Window();
-
+    void run();
 protected:
 
+    ~Window();
 
-    void run() ;
     virtual void onUpdate()=0;
     virtual void onRender()=0;
 

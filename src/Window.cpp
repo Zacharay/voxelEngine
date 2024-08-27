@@ -3,28 +3,30 @@
 
 // Constructor
 Window::Window() : m_window(nullptr) {
-    // Initialize GLFW
+
     if (!glfwInit()) {
         std::cerr << "Failed to initialize GLFW" << std::endl;
         exit(-1);
     }
 
-    // Create window
-    m_window = glfwCreateWindow(800, 600, "OpenGL Window", nullptr, nullptr);
+
+    m_window = glfwCreateWindow(900, 900, "OpenGL Window", nullptr, nullptr);
     if (!m_window) {
         std::cerr << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
         exit(-1);
     }
 
-    // Make the window's context current
+
     glfwMakeContextCurrent(m_window);
 
-    // Initialize GLAD
+
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         std::cerr << "Failed to initialize GLAD" << std::endl;
         exit(-1);
     }
+
+    glViewport(0, 0, 900, 900);
 }
 
 // Destructor

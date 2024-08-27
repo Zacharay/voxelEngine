@@ -20,8 +20,10 @@ file(GLOB_RECURSE SOURCES
 
 # Add the executable
 add_executable(voxelEngine ${SOURCES}
-        include/Window.hpp
-)
+        src/Shader.cpp
+        include/Shader.hpp
+        include/MeshRenderer.hpp
+        include/Camera.hpp)
 
 # Include directories
 include_directories(${OPENGL_INCLUDE_DIRS})
