@@ -27,6 +27,7 @@ Window::Window() : m_window(nullptr) {
     }
 
     glViewport(0, 0, 900, 900);
+
 }
 
 // Destructor
@@ -42,6 +43,8 @@ void Window::run()  {
     while (!glfwWindowShouldClose(m_window)) {
 
         glClear(GL_COLOR_BUFFER_BIT);
+        glClearColor(0.53f,0.8f,0.93f,1.0f);
+
 
         onUpdate();
 

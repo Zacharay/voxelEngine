@@ -13,21 +13,56 @@ void MeshRenderer::setViewMatrix(const glm::mat4 &viewMatrix) {
 }
 
 void MeshRenderer::renderMesh(std::vector<Face> &faces) {
-    Face face;
+    Face face1;
 
-    face.vertexPositions[0] = glm::vec3(0.5f, -0.5f, 0.0f);
-    face.vertexPositions[1] = glm::vec3(-0.5f, -0.5f, 0.0f);
-    face.vertexPositions[2] = glm::vec3(-0.5f, 0.5f, 0.0f);
-    face.vertexPositions[3] = glm::vec3(-0.5f, 0.5f, 0.0f);
-    face.vertexPositions[4] = glm::vec3(0.5f, 0.5f, 0.0f);
-    face.vertexPositions[5] = glm::vec3(0.5f, -0.5f, 0.0f);
+    face1.vertexPositions[0] = glm::vec3(0.5f, -0.5f, 0.0f);
+    face1.vertexPositions[1] = glm::vec3(-0.5f, -0.5f, 0.0f);
+    face1.vertexPositions[2] = glm::vec3(-0.5f, 0.5f, 0.0f);
+    face1.vertexPositions[3] = glm::vec3(-0.5f, 0.5f, 0.0f);
+    face1.vertexPositions[4] = glm::vec3(0.5f, 0.5f, 0.0f);
+    face1.vertexPositions[5] = glm::vec3(0.5f, -0.5f, 0.0f);
 
-    face.textureCoordinates[0] = glm::vec2(0.0f, 0.0f);
-    face.textureCoordinates[1] = glm::vec2(0.0f, 0.0f);
-    face.textureCoordinates[2] = glm::vec2(0.0f, 0.0f);
-    face.textureCoordinates[3] = glm::vec2(0.0f, 0.0f);
-    face.textureCoordinates[4] = glm::vec2(0.0f, 0.0f);
-    face.textureCoordinates[5] = glm::vec2(0.0f, 0.0f);
+    face1.textureCoordinates[0] = glm::vec2(0.0f, 0.0f);
+    face1.textureCoordinates[1] = glm::vec2(0.0f, 0.0f);
+    face1.textureCoordinates[2] = glm::vec2(0.0f, 0.0f);
+    face1.textureCoordinates[3] = glm::vec2(0.0f, 0.0f);
+    face1.textureCoordinates[4] = glm::vec2(0.0f, 0.0f);
+    face1.textureCoordinates[5] = glm::vec2(0.0f, 0.0f);
+
+    Face face2;
+
+    face2.vertexPositions[0] = glm::vec3(0.5f, -0.5f, 1.0f);
+    face2.vertexPositions[1] = glm::vec3(-0.5f, -0.5f, 1.0f);
+    face2.vertexPositions[2] = glm::vec3(-0.5f, 0.5f, 1.0f);
+    face2.vertexPositions[3] = glm::vec3(-0.5f, 0.5f, 1.0f);
+    face2.vertexPositions[4] = glm::vec3(0.5f, 0.5f, 1.0f);
+    face2.vertexPositions[5] = glm::vec3(0.5f, -0.5f, 1.0f);
+
+    face2.textureCoordinates[0] = glm::vec2(0.0f, 0.0f);
+    face2.textureCoordinates[1] = glm::vec2(0.0f, 0.0f);
+    face2.textureCoordinates[2] = glm::vec2(0.0f, 0.0f);
+    face2.textureCoordinates[3] = glm::vec2(0.0f, 0.0f);
+    face2.textureCoordinates[4] = glm::vec2(0.0f, 0.0f);
+    face2.textureCoordinates[5] = glm::vec2(0.0f, 0.0f);
+
+    Face face3;
+
+    face3.textureCoordinates[0] = glm::vec2(0.0f, 0.0f);
+    face3.textureCoordinates[1] = glm::vec2(0.0f, 0.0f);
+    face3.textureCoordinates[2] = glm::vec2(0.0f, 0.0f);
+    face3.textureCoordinates[3] = glm::vec2(0.0f, 0.0f);
+    face3.textureCoordinates[4] = glm::vec2(0.0f, 0.0f);
+    face3.textureCoordinates[5] = glm::vec2(0.0f, 0.0f);
+
+
+    for(int i=0;i<6;i++) {
+        face3.vertexPositions[i] = face2.vertexPositions[i]  + glm::vec3(0.0f,0.0f,-3.0f);
+    }
+
+
+    faces.push_back(face1);
+    faces.push_back(face2);
+    faces.push_back(face3);
 
     unsigned int VAO, VBO;
     glGenVertexArrays(1, &VAO);
@@ -35,7 +70,7 @@ void MeshRenderer::renderMesh(std::vector<Face> &faces) {
     glBindVertexArray(VAO);
 
     std::vector<float> vertexData;
-
+    for(const Face & face : faces) {
         for (int i = 0; i < 6; ++i) {
             // Interleave vertex positions and texture coordinates
             vertexData.push_back(face.vertexPositions[i].x);
@@ -44,7 +79,7 @@ void MeshRenderer::renderMesh(std::vector<Face> &faces) {
             vertexData.push_back(face.textureCoordinates[i].x);
             vertexData.push_back(face.textureCoordinates[i].y);
         }
-
+    }
 
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
     glBufferData(GL_ARRAY_BUFFER, vertexData.size() * sizeof(float), &vertexData[0], GL_STATIC_DRAW);
