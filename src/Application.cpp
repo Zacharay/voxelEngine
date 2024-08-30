@@ -42,6 +42,7 @@ Application::Application() : Window(){
 void Application::processInput(float deltaTime) {
 
     if(glfwGetKey(m_window, GLFW_KEY_W) == GLFW_PRESS) {
+
         camera->processKeyboardInput(Camera_Movement::FORWARD,deltaTime);
     }
     if(glfwGetKey(m_window, GLFW_KEY_S) == GLFW_PRESS) {
@@ -66,14 +67,28 @@ void Application::processInput(float deltaTime) {
 
 
 void Application::onRender() {
-    std::vector<Face> faces;
+
+    const std::vector<Chunk> &chunks = world->getChunks();
 
     meshRenderer->setViewMatrix(camera->getViewMatrix());
-    meshRenderer->renderMesh(faces);
+    for(const Chunk &chunk : chunks) {
+        std::vector<Face> faces = chunk.getMesh();
+        meshRenderer->renderMesh(faces);
+        /*for(Face face : faces) {
+            for(int i=0;i<6;i++) {
+                std::cout<<face.vertexPositions[i].x<<" "<<face.vertexPositions[i].y<<" "<<face.vertexPositions[i].z<<" "<<std::endl;
+            }
+        }*/
+        //std::cout<<std::endl;
+
+    }
+
+
 }
 void Application::onUpdate() {
     float currentFrame = glfwGetTime();
     float deltaTime = currentFrame - m_lastFrame;
     m_lastFrame = currentFrame;
+
     processInput(deltaTime);
 }

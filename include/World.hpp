@@ -5,10 +5,10 @@
 
 class World {
 
-
+    std::vector<Chunk>chunks;
 public:
-    std::vector<std::unique_ptr<Chunk>>chunks;
+
     World();
     ~World();
-
+    const std::vector<Chunk>& getChunks() const;
 };

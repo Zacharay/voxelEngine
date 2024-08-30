@@ -2,8 +2,10 @@ cmake_minimum_required(VERSION 3.10)
 project(voxelEngine)
 
 # Set C++ standard
-set(CMAKE_CXX_STANDARD 11)
-set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 # Set policy for OpenGL preference
 if(POLICY CMP0072)
         cmake_policy(SET CMP0072 NEW)
@@ -23,7 +25,8 @@ add_executable(voxelEngine ${SOURCES}
         src/Shader.cpp
         include/Shader.hpp
         include/MeshRenderer.hpp
-        include/Camera.hpp)
+        include/Camera.hpp
+        include/Config.hpp)
 
 # Include directories
 include_directories(${OPENGL_INCLUDE_DIRS})

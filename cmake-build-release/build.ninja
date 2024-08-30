@@ -51,49 +51,49 @@ build cmake_object_order_depends_target_voxelEngine: phony || .
 
 build CMakeFiles/voxelEngine.dir/src/Application.cpp.o: CXX_COMPILER__voxelEngine_unscanned_Release /home/zachary/cppProjects/voxelEngine/src/Application.cpp || cmake_object_order_depends_target_voxelEngine
   DEP_FILE = CMakeFiles/voxelEngine.dir/src/Application.cpp.o.d
-  FLAGS = -O3 -DNDEBUG -std=gnu++11 -fdiagnostics-color=always
+  FLAGS = -O3 -DNDEBUG -std=c++17 -fdiagnostics-color=always
   INCLUDES = -I/home/zachary/cppProjects/voxelEngine/thirdParty -I/home/zachary/cppProjects/voxelEngine/include
   OBJECT_DIR = CMakeFiles/voxelEngine.dir
   OBJECT_FILE_DIR = CMakeFiles/voxelEngine.dir/src
 
 build CMakeFiles/voxelEngine.dir/src/Camera.cpp.o: CXX_COMPILER__voxelEngine_unscanned_Release /home/zachary/cppProjects/voxelEngine/src/Camera.cpp || cmake_object_order_depends_target_voxelEngine
   DEP_FILE = CMakeFiles/voxelEngine.dir/src/Camera.cpp.o.d
-  FLAGS = -O3 -DNDEBUG -std=gnu++11 -fdiagnostics-color=always
+  FLAGS = -O3 -DNDEBUG -std=c++17 -fdiagnostics-color=always
   INCLUDES = -I/home/zachary/cppProjects/voxelEngine/thirdParty -I/home/zachary/cppProjects/voxelEngine/include
   OBJECT_DIR = CMakeFiles/voxelEngine.dir
   OBJECT_FILE_DIR = CMakeFiles/voxelEngine.dir/src
 
 build CMakeFiles/voxelEngine.dir/src/Chunk.cpp.o: CXX_COMPILER__voxelEngine_unscanned_Release /home/zachary/cppProjects/voxelEngine/src/Chunk.cpp || cmake_object_order_depends_target_voxelEngine
   DEP_FILE = CMakeFiles/voxelEngine.dir/src/Chunk.cpp.o.d
-  FLAGS = -O3 -DNDEBUG -std=gnu++11 -fdiagnostics-color=always
+  FLAGS = -O3 -DNDEBUG -std=c++17 -fdiagnostics-color=always
   INCLUDES = -I/home/zachary/cppProjects/voxelEngine/thirdParty -I/home/zachary/cppProjects/voxelEngine/include
   OBJECT_DIR = CMakeFiles/voxelEngine.dir
   OBJECT_FILE_DIR = CMakeFiles/voxelEngine.dir/src
 
 build CMakeFiles/voxelEngine.dir/src/MeshRenderer.cpp.o: CXX_COMPILER__voxelEngine_unscanned_Release /home/zachary/cppProjects/voxelEngine/src/MeshRenderer.cpp || cmake_object_order_depends_target_voxelEngine
   DEP_FILE = CMakeFiles/voxelEngine.dir/src/MeshRenderer.cpp.o.d
-  FLAGS = -O3 -DNDEBUG -std=gnu++11 -fdiagnostics-color=always
+  FLAGS = -O3 -DNDEBUG -std=c++17 -fdiagnostics-color=always
   INCLUDES = -I/home/zachary/cppProjects/voxelEngine/thirdParty -I/home/zachary/cppProjects/voxelEngine/include
   OBJECT_DIR = CMakeFiles/voxelEngine.dir
   OBJECT_FILE_DIR = CMakeFiles/voxelEngine.dir/src
 
 build CMakeFiles/voxelEngine.dir/src/Shader.cpp.o: CXX_COMPILER__voxelEngine_unscanned_Release /home/zachary/cppProjects/voxelEngine/src/Shader.cpp || cmake_object_order_depends_target_voxelEngine
   DEP_FILE = CMakeFiles/voxelEngine.dir/src/Shader.cpp.o.d
-  FLAGS = -O3 -DNDEBUG -std=gnu++11 -fdiagnostics-color=always
+  FLAGS = -O3 -DNDEBUG -std=c++17 -fdiagnostics-color=always
   INCLUDES = -I/home/zachary/cppProjects/voxelEngine/thirdParty -I/home/zachary/cppProjects/voxelEngine/include
   OBJECT_DIR = CMakeFiles/voxelEngine.dir
   OBJECT_FILE_DIR = CMakeFiles/voxelEngine.dir/src
 
 build CMakeFiles/voxelEngine.dir/src/Window.cpp.o: CXX_COMPILER__voxelEngine_unscanned_Release /home/zachary/cppProjects/voxelEngine/src/Window.cpp || cmake_object_order_depends_target_voxelEngine
   DEP_FILE = CMakeFiles/voxelEngine.dir/src/Window.cpp.o.d
-  FLAGS = -O3 -DNDEBUG -std=gnu++11 -fdiagnostics-color=always
+  FLAGS = -O3 -DNDEBUG -std=c++17 -fdiagnostics-color=always
   INCLUDES = -I/home/zachary/cppProjects/voxelEngine/thirdParty -I/home/zachary/cppProjects/voxelEngine/include
   OBJECT_DIR = CMakeFiles/voxelEngine.dir
   OBJECT_FILE_DIR = CMakeFiles/voxelEngine.dir/src
 
 build CMakeFiles/voxelEngine.dir/src/World.cpp.o: CXX_COMPILER__voxelEngine_unscanned_Release /home/zachary/cppProjects/voxelEngine/src/World.cpp || cmake_object_order_depends_target_voxelEngine
   DEP_FILE = CMakeFiles/voxelEngine.dir/src/World.cpp.o.d
-  FLAGS = -O3 -DNDEBUG -std=gnu++11 -fdiagnostics-color=always
+  FLAGS = -O3 -DNDEBUG -std=c++17 -fdiagnostics-color=always
   INCLUDES = -I/home/zachary/cppProjects/voxelEngine/thirdParty -I/home/zachary/cppProjects/voxelEngine/include
   OBJECT_DIR = CMakeFiles/voxelEngine.dir
   OBJECT_FILE_DIR = CMakeFiles/voxelEngine.dir/src
@@ -107,7 +107,7 @@ build CMakeFiles/voxelEngine.dir/src/glad.c.o: C_COMPILER__voxelEngine_unscanned
 
 build CMakeFiles/voxelEngine.dir/src/main.cpp.o: CXX_COMPILER__voxelEngine_unscanned_Release /home/zachary/cppProjects/voxelEngine/src/main.cpp || cmake_object_order_depends_target_voxelEngine
   DEP_FILE = CMakeFiles/voxelEngine.dir/src/main.cpp.o.d
-  FLAGS = -O3 -DNDEBUG -std=gnu++11 -fdiagnostics-color=always
+  FLAGS = -O3 -DNDEBUG -std=c++17 -fdiagnostics-color=always
   INCLUDES = -I/home/zachary/cppProjects/voxelEngine/thirdParty -I/home/zachary/cppProjects/voxelEngine/include
   OBJECT_DIR = CMakeFiles/voxelEngine.dir
   OBJECT_FILE_DIR = CMakeFiles/voxelEngine.dir/src

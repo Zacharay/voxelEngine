@@ -15,4 +15,5 @@ public:
     void useProgram();
     void setMat4(glm::mat4 matrix, const char* uniformName);
     void setVec3(glm::vec3 data, const char* uniformName);
+    void setInt(int data, const char* uniformName);
 };

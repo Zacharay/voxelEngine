@@ -1,68 +1,53 @@
 #include "MeshRenderer.hpp"
 #include "Shader.hpp"
+#include "Config.hpp"
+#include <iostream>
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 MeshRenderer::MeshRenderer() {
-    shader = std::unique_ptr<Shader>(new Shader("blockVertexShader.vert","blockFragmentShader.frag"));
+    shader = std::make_unique<Shader>("blockVertexShader.vert", "blockFragmentShader.frag");
     m_viewMatrix = glm::mat4(1.0f);
     m_viewMatrix = glm::translate(m_viewMatrix, glm::vec3(0.0f, 0.0f, -3.0f));
 
-    m_projectionMatrix = glm::perspective(glm::radians(45.0f), 1.0f, 0.1f, 100.0f);
+    constexpr float aspectRatio = static_cast<float>(Config::windowWidth) / static_cast<float>(Config::windowHeight);
+    m_projectionMatrix = glm::perspective(glm::radians(45.0f), aspectRatio, 0.1f, 100.0f);
+
+
+
+    glGenTextures(1, &m_texture);
+    glBindTexture(GL_TEXTURE_2D, m_texture);
+
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    stbi_set_flip_vertically_on_load(true);
+    int width, height, nrChannels;
+    unsigned char *data = stbi_load("textures/grass_block_side.png", &width, &height, &nrChannels, 0);
+
+    if (!data) {
+        std::cerr << "Failed to load texture" << std::endl;
+        return;
+    }
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, GL_RGBA , GL_UNSIGNED_BYTE, data);
+    glGenerateMipmap(GL_TEXTURE_2D);
+
+
+    stbi_image_free(data);
+
+    shader->useProgram();
+    shader->setInt( 0,"mainTexture");
+
 }
 void MeshRenderer::setViewMatrix(const glm::mat4 &viewMatrix) {
     m_viewMatrix = viewMatrix;
 }
 
-void MeshRenderer::renderMesh(std::vector<Face> &faces) {
-    Face face1;
+void MeshRenderer::renderMesh(const std::vector<Face> &faces)const {
 
-    face1.vertexPositions[0] = glm::vec3(0.5f, -0.5f, 0.0f);
-    face1.vertexPositions[1] = glm::vec3(-0.5f, -0.5f, 0.0f);
-    face1.vertexPositions[2] = glm::vec3(-0.5f, 0.5f, 0.0f);
-    face1.vertexPositions[3] = glm::vec3(-0.5f, 0.5f, 0.0f);
-    face1.vertexPositions[4] = glm::vec3(0.5f, 0.5f, 0.0f);
-    face1.vertexPositions[5] = glm::vec3(0.5f, -0.5f, 0.0f);
-
-    face1.textureCoordinates[0] = glm::vec2(0.0f, 0.0f);
-    face1.textureCoordinates[1] = glm::vec2(0.0f, 0.0f);
-    face1.textureCoordinates[2] = glm::vec2(0.0f, 0.0f);
-    face1.textureCoordinates[3] = glm::vec2(0.0f, 0.0f);
-    face1.textureCoordinates[4] = glm::vec2(0.0f, 0.0f);
-    face1.textureCoordinates[5] = glm::vec2(0.0f, 0.0f);
-
-    Face face2;
-
-    face2.vertexPositions[0] = glm::vec3(0.5f, -0.5f, 1.0f);
-    face2.vertexPositions[1] = glm::vec3(-0.5f, -0.5f, 1.0f);
-    face2.vertexPositions[2] = glm::vec3(-0.5f, 0.5f, 1.0f);
-    face2.vertexPositions[3] = glm::vec3(-0.5f, 0.5f, 1.0f);
-    face2.vertexPositions[4] = glm::vec3(0.5f, 0.5f, 1.0f);
-    face2.vertexPositions[5] = glm::vec3(0.5f, -0.5f, 1.0f);
-
-    face2.textureCoordinates[0] = glm::vec2(0.0f, 0.0f);
-    face2.textureCoordinates[1] = glm::vec2(0.0f, 0.0f);
-    face2.textureCoordinates[2] = glm::vec2(0.0f, 0.0f);
-    face2.textureCoordinates[3] = glm::vec2(0.0f, 0.0f);
-    face2.textureCoordinates[4] = glm::vec2(0.0f, 0.0f);
-    face2.textureCoordinates[5] = glm::vec2(0.0f, 0.0f);
-
-    Face face3;
-
-    face3.textureCoordinates[0] = glm::vec2(0.0f, 0.0f);
-    face3.textureCoordinates[1] = glm::vec2(0.0f, 0.0f);
-    face3.textureCoordinates[2] = glm::vec2(0.0f, 0.0f);
-    face3.textureCoordinates[3] = glm::vec2(0.0f, 0.0f);
-    face3.textureCoordinates[4] = glm::vec2(0.0f, 0.0f);
-    face3.textureCoordinates[5] = glm::vec2(0.0f, 0.0f);
-
-
-    for(int i=0;i<6;i++) {
-        face3.vertexPositions[i] = face2.vertexPositions[i]  + glm::vec3(0.0f,0.0f,-3.0f);
-    }
-
-
-    faces.push_back(face1);
-    faces.push_back(face2);
-    faces.push_back(face3);
 
     unsigned int VAO, VBO;
     glGenVertexArrays(1, &VAO);
@@ -96,6 +81,9 @@ void MeshRenderer::renderMesh(std::vector<Face> &faces) {
     shader->setMat4(modelMatrix,"model");
     shader->setMat4(m_projectionMatrix,"projection");
     shader->setMat4(m_viewMatrix,"view");
+
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, m_texture);
 
     glBindVertexArray(VAO);
     glDrawArrays(GL_TRIANGLES, 0, vertexData.size() / 5);

@@ -12,10 +12,12 @@ class MeshRenderer {
     std::unique_ptr<Shader> shader;
     glm::mat4 m_viewMatrix;
     glm::mat4 m_projectionMatrix;
+
+    unsigned int m_texture;
     public:
     MeshRenderer();
 
-    void renderMesh(std::vector<Face>&faces);
+    void renderMesh(const std::vector<Face>&faces)const;
     void setViewMatrix(const glm::mat4 &viewMatrix);
 
 };

@@ -1,5 +1,8 @@
 #include "Window.hpp"
 #include <iostream>
+#include "Config.hpp"
+
+
 
 // Constructor
 Window::Window() : m_window(nullptr) {
@@ -10,7 +13,7 @@ Window::Window() : m_window(nullptr) {
     }
 
 
-    m_window = glfwCreateWindow(900, 900, "OpenGL Window", nullptr, nullptr);
+    m_window = glfwCreateWindow(Config::windowWidth, Config::windowHeight, "OpenGL Window", nullptr, nullptr);
     if (!m_window) {
         std::cerr << "Failed to create GLFW window" << std::endl;
         glfwTerminate();
@@ -26,7 +29,7 @@ Window::Window() : m_window(nullptr) {
         exit(-1);
     }
 
-    glViewport(0, 0, 900, 900);
+    glViewport(0, 0, Config::windowWidth, Config::windowHeight);
 
 }
 
@@ -39,10 +42,10 @@ Window::~Window() {
 }
 
 void Window::run()  {
-
+    glEnable(GL_DEPTH_TEST);
     while (!glfwWindowShouldClose(m_window)) {
 
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
         glClearColor(0.53f,0.8f,0.93f,1.0f);
 
 

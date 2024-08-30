@@ -85,3 +85,8 @@ void Shader::setVec3(glm::vec3 data, const char* uniformName)
 
     glUniform3fv(uniformLocation, 1, &data[0]);
 }
+
+void Shader::setInt(int data, const char *uniformName) {
+    int uniformLocation = glGetUniformLocation(this->ID, uniformName);
+    glUniform1i(uniformLocation, data);
+}
