@@ -3,17 +3,22 @@
 #include <glm/vec3.hpp>
 #include <Shader.hpp>
 #include <vector>
-struct Face {
-    glm::vec3 vertexPositions[6];
-    glm::vec2 textureCoordinates[6];
+
+struct Vertex {
+    glm::vec3 position;
+    glm::vec3 color;
 };
+struct Face {
+    Vertex vertices[6];
+};
+
+
 
 class MeshRenderer {
     std::unique_ptr<Shader> shader;
     glm::mat4 m_viewMatrix;
     glm::mat4 m_projectionMatrix;
 
-    unsigned int m_texture;
     public:
     MeshRenderer();
 

@@ -3,8 +3,9 @@
 #include <GLFW/glfw3.h>
 class Window  {
 private:
-
-
+    void calculateFps();
+    int frameCount;
+    double previousTime;
 public:
     Window();
     void run();

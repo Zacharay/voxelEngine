@@ -30,7 +30,7 @@ Window::Window() : m_window(nullptr) {
     }
 
     glViewport(0, 0, Config::windowWidth, Config::windowHeight);
-
+    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 }
 
 // Destructor
@@ -40,6 +40,23 @@ Window::~Window() {
     }
     glfwTerminate();
 }
+
+void Window::calculateFps() {
+    double currentTime = glfwGetTime();
+    double elapsedTime = currentTime - previousTime;
+    frameCount++;
+
+    if (elapsedTime >= 1.0) { // If a second has passed
+        double fps = static_cast<double>(frameCount) / elapsedTime;
+        std::cout << "FPS: " << fps << std::endl;
+
+        // Reset for the next calculation
+        previousTime = currentTime;
+        frameCount = 0;
+    }
+}
+
+
 
 void Window::run()  {
     glEnable(GL_DEPTH_TEST);
@@ -53,6 +70,7 @@ void Window::run()  {
 
         onRender();
 
+        calculateFps();
 
         glfwSwapBuffers(m_window);
         glfwPollEvents();

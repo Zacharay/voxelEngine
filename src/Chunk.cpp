@@ -1,5 +1,7 @@
 #include "Chunk.hpp"
 
+#include <iostream>
+
 // Front face (Z+)
 constexpr glm::vec3 frontFace[6] = {
     glm::vec3(0.5f, -0.5f, 0.5f),  // Bottom-right
@@ -60,15 +62,6 @@ constexpr glm::vec3 bottomFace[6] = {
     glm::vec3(-0.5f, -0.5f, 0.5f)   // Bottom-left
 };
 
-// Texture coordinates (shared across all faces)
-constexpr glm::vec2 textureCoords[6] = {
-    glm::vec2(1.0f, 0.0f), // Bottom-right
-    glm::vec2(0.0f, 0.0f), // Bottom-left
-    glm::vec2(0.0f, 1.0f), // Top-left
-    glm::vec2(0.0f, 1.0f), // Top-left
-    glm::vec2(1.0f, 1.0f), // Top-right
-    glm::vec2(1.0f, 0.0f)  // Bottom-right
-};
 
 Chunk::Chunk(const int x,const int y,const int z):blocks{},
     m_chunkPositionX(x),
@@ -85,9 +78,9 @@ Chunk::Chunk(const int x,const int y,const int z):blocks{},
 }
 void Chunk::generateMesh() {
     for(int z=0;z<Config::chunkSize;z++)
-    for(int y=0;y<Config::chunkSize;y++) {
-        for(int x=0;x<Config::chunkSize;x++) {
-            glm::vec3 offsetVec = glm::vec3(
+        for(int y=0;y<Config::chunkSize;y++) {
+            for(int x=0;x<Config::chunkSize;x++) {
+                glm::vec3 offsetVec = glm::vec3(
                 static_cast<float>(m_chunkPositionX)*16.0f+x,
                 static_cast<float>(m_chunkPositionY)*16.0f+y,
                 static_cast<float>(m_chunkPositionZ)*16.0f+z);
@@ -100,29 +93,36 @@ void Chunk::generateMesh() {
             Face faceBottom;
 
 
-
-
+            glm::vec3 color ;
+            if(m_chunkPositionY==0) {
+                color = glm::vec3(34.0f/255.0f,139.0f/255.0f,34.0f/255.0f);
+            }
+            else {
+                color = glm::vec3(34.0f/255.0f,139.0f/255.0f,34.0f/255.0f);
+                //color = glm::vec3(237.0f/255.0f,201.0f/255.0f,175.0f/255.0f);
+            }
 
             for (int i = 0; i < 6; i++)
             {
-                faceFront.vertexPositions[i] = frontFace[i] + offsetVec;
-                faceFront.textureCoordinates[i] = textureCoords[i];
+                faceFront.vertices[i].position = frontFace[i] + offsetVec;
+                faceFront.vertices[i].color = color;
 
-                faceLeft.vertexPositions[i] = leftFace[i] + offsetVec;
-                faceLeft.textureCoordinates[i] = textureCoords[i];
+                faceLeft.vertices[i].position = leftFace[i] + offsetVec;
+                faceLeft.vertices[i].color = color;
 
-                faceBack.vertexPositions[i] = backFace[i] + offsetVec;
-                faceBack.textureCoordinates[i] = textureCoords[i];
+                faceBack.vertices[i].position = backFace[i] + offsetVec;
+                faceBack.vertices[i].color = color;
 
-                faceRight.vertexPositions[i] = rightFace[i] + offsetVec;
-                faceRight.textureCoordinates[i] = textureCoords[i];
+                faceRight.vertices[i].position = rightFace[i] + offsetVec;
+                faceRight.vertices[i].color = color;
 
-                faceTop.vertexPositions[i] = topFace[i] + offsetVec;
-                faceTop.textureCoordinates[i] = textureCoords[i];
+                faceTop.vertices[i].position = topFace[i] + offsetVec;
+                faceTop.vertices[i].color = color;
 
-                faceBottom.vertexPositions[i] = bottomFace[i] + offsetVec;
-                faceBottom.textureCoordinates[i] = textureCoords[i];
+                faceBottom.vertices[i].position = bottomFace[i] + offsetVec;
+                faceBottom.vertices[i].color = color;
             }
+
             mesh.push_back(faceFront);
             mesh.push_back(faceLeft);
             mesh.push_back(faceBack);
