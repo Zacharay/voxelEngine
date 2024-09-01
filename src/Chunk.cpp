@@ -1,134 +1,92 @@
 #include "Chunk.hpp"
-
 #include <iostream>
-
-// Front face (Z+)
-constexpr glm::vec3 frontFace[6] = {
-    glm::vec3(0.5f, -0.5f, 0.5f),  // Bottom-right
-    glm::vec3(-0.5f, -0.5f, 0.5f), // Bottom-left
-    glm::vec3(-0.5f, 0.5f, 0.5f),  // Top-left
-    glm::vec3(-0.5f, 0.5f, 0.5f),  // Top-left
-    glm::vec3(0.5f, 0.5f, 0.5f),   // Top-right
-    glm::vec3(0.5f, -0.5f, 0.5f)   // Bottom-right
-};
-
-// Back face (Z-)
-constexpr glm::vec3 backFace[6] = {
-    glm::vec3(0.5f, -0.5f, -0.5f),  // Bottom-right
-    glm::vec3(-0.5f, -0.5f, -0.5f), // Bottom-left
-    glm::vec3(-0.5f, 0.5f, -0.5f),  // Top-left
-    glm::vec3(-0.5f, 0.5f, -0.5f),  // Top-left
-    glm::vec3(0.5f, 0.5f, -0.5f),   // Top-right
-    glm::vec3(0.5f, -0.5f, -0.5f)   // Bottom-right
-};
-
-// Left face (X-)
-constexpr glm::vec3 leftFace[6] = {
-    glm::vec3(-0.5f, -0.5f, 0.5f),  // Bottom-right
-    glm::vec3(-0.5f, -0.5f, -0.5f), // Bottom-left
-    glm::vec3(-0.5f, 0.5f, -0.5f),  // Top-left
-    glm::vec3(-0.5f, 0.5f, -0.5f),  // Top-left
-    glm::vec3(-0.5f, 0.5f, 0.5f),   // Top-right
-    glm::vec3(-0.5f, -0.5f, 0.5f)   // Bottom-right
-};
-
-// Right face (X+)
-constexpr glm::vec3 rightFace[6] = {
-    glm::vec3(0.5f, -0.5f, 0.5f),  // Bottom-right
-    glm::vec3(0.5f, -0.5f, -0.5f), // Bottom-left
-    glm::vec3(0.5f, 0.5f, -0.5f),  // Top-left
-    glm::vec3(0.5f, 0.5f, -0.5f),  // Top-left
-    glm::vec3(0.5f, 0.5f, 0.5f),   // Top-right
-    glm::vec3(0.5f, -0.5f, 0.5f)   // Bottom-right
-};
-
-// Top face (Y+)
-constexpr glm::vec3 topFace[6] = {
-    glm::vec3(-0.5f, 0.5f, 0.5f),  // Bottom-left
-    glm::vec3(0.5f, 0.5f, 0.5f),   // Bottom-right
-    glm::vec3(0.5f, 0.5f, -0.5f),  // Top-right
-    glm::vec3(0.5f, 0.5f, -0.5f),  // Top-right
-    glm::vec3(-0.5f, 0.5f, -0.5f), // Top-left
-    glm::vec3(-0.5f, 0.5f, 0.5f)   // Bottom-left
-};
-
-// Bottom face (Y-)
-constexpr glm::vec3 bottomFace[6] = {
-    glm::vec3(-0.5f, -0.5f, 0.5f),  // Bottom-left
-    glm::vec3(0.5f, -0.5f, 0.5f),   // Bottom-right
-    glm::vec3(0.5f, -0.5f, -0.5f),  // Top-right
-    glm::vec3(0.5f, -0.5f, -0.5f),  // Top-right
-    glm::vec3(-0.5f, -0.5f, -0.5f), // Top-left
-    glm::vec3(-0.5f, -0.5f, 0.5f)   // Bottom-left
-};
+#include <array>
 
 
-Chunk::Chunk(const int x,const int y,const int z):blocks{},
+
+
+
+constexpr std::array<std::array<glm::vec3, 6>, 6> faceVertices = {{
+    // Front face (Z+)
+    { glm::vec3(0.5f, -0.5f, 0.5f), glm::vec3(-0.5f, -0.5f, 0.5f), glm::vec3(-0.5f, 0.5f, 0.5f),
+      glm::vec3(-0.5f, 0.5f, 0.5f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(0.5f, -0.5f, 0.5f) },
+    // Back face (Z-)
+    { glm::vec3(0.5f, -0.5f, -0.5f), glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(-0.5f, 0.5f, -0.5f),
+      glm::vec3(-0.5f, 0.5f, -0.5f), glm::vec3(0.5f, 0.5f, -0.5f), glm::vec3(0.5f, -0.5f, -0.5f) },
+    // Left face (X-)
+    { glm::vec3(-0.5f, -0.5f, 0.5f), glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(-0.5f, 0.5f, -0.5f),
+      glm::vec3(-0.5f, 0.5f, -0.5f), glm::vec3(-0.5f, 0.5f, 0.5f), glm::vec3(-0.5f, -0.5f, 0.5f) },
+    // Right face (X+)
+    { glm::vec3(0.5f, -0.5f, 0.5f), glm::vec3(0.5f, -0.5f, -0.5f), glm::vec3(0.5f, 0.5f, -0.5f),
+      glm::vec3(0.5f, 0.5f, -0.5f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(0.5f, -0.5f, 0.5f) },
+    // Top face (Y+)
+    { glm::vec3(-0.5f, 0.5f, 0.5f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(0.5f, 0.5f, -0.5f),
+      glm::vec3(0.5f, 0.5f, -0.5f), glm::vec3(-0.5f, 0.5f, -0.5f), glm::vec3(-0.5f, 0.5f, 0.5f) },
+    // Bottom face (Y-)
+    { glm::vec3(-0.5f, -0.5f, 0.5f), glm::vec3(0.5f, -0.5f, 0.5f), glm::vec3(0.5f, -0.5f, -0.5f),
+      glm::vec3(0.5f, -0.5f, -0.5f), glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(-0.5f, -0.5f, 0.5f) }
+}};
+
+Chunk::Chunk(const int x,const int y,const int z,BlockType block):blocks{},
     m_chunkPositionX(x),
     m_chunkPositionY(y),
     m_chunkPositionZ(z)
 {
-
-    for(int i=0;i<Config::chunkSize;i++)
+    if(block==Air) {
         for(int j=0;j<Config::chunkSize;j++)
-            for(int k=0;k<Config::chunkSize;k++) {
-                blocks[i][j][k] = 0;
-            }
+        for(int i=j;i<Config::chunkSize;i++)
+                for(int k=j;k<Config::chunkSize;k++) {
+
+                    blocks[i][j][k] = Grass;
+                }
+    }
+    else {
+        for(int i=0;i<Config::chunkSize;i++)
+            for(int j=0;j<Config::chunkSize;j++)
+                for(int k=0;k<Config::chunkSize;k++) {
+                    int a  = (i+j+k)%3+1;
+                    BlockType b = (BlockType)a;
+                    blocks[i][j][k] = b;
+                }
+    }
+
 
 }
+
 void Chunk::generateMesh() {
     for(int z=0;z<Config::chunkSize;z++)
         for(int y=0;y<Config::chunkSize;y++) {
             for(int x=0;x<Config::chunkSize;x++) {
+
+                if(blocks[z][y][x]==BlockType::Air)continue;
+
                 glm::vec3 offsetVec = glm::vec3(
                 static_cast<float>(m_chunkPositionX)*16.0f+x,
                 static_cast<float>(m_chunkPositionY)*16.0f+y,
                 static_cast<float>(m_chunkPositionZ)*16.0f+z);
 
-            Face faceFront;
-            Face faceBack;
-            Face faceLeft;
-            Face faceRight;
-            Face faceTop;
-            Face faceBottom;
+                std::array<bool, 6> shouldRenderFace = {{
+                    (z + 1 == Config::chunkSize || blocks[z + 1][y][x] == 0), // FRONT
+                    (z == 0 || blocks[z - 1][y][x] == 0),                     // BACK
+                    (x == 0 || blocks[z][y][x - 1] == 0),                     // LEFT
+                    (x + 1 == Config::chunkSize || blocks[z][y][x + 1] == 0), // RIGHT
+                    (y + 1 == Config::chunkSize || blocks[z][y + 1][x] == 0), // TOP
+                    (y == 0 || blocks[z][y - 1][x] == 0)                      // BOTTOM
+                }};
 
 
-            glm::vec3 color ;
-            if(m_chunkPositionY==0) {
-                color = glm::vec3(34.0f/255.0f,139.0f/255.0f,34.0f/255.0f);
-            }
-            else {
-                color = glm::vec3(34.0f/255.0f,139.0f/255.0f,34.0f/255.0f);
-                //color = glm::vec3(237.0f/255.0f,201.0f/255.0f,175.0f/255.0f);
-            }
-
-            for (int i = 0; i < 6; i++)
-            {
-                faceFront.vertices[i].position = frontFace[i] + offsetVec;
-                faceFront.vertices[i].color = color;
-
-                faceLeft.vertices[i].position = leftFace[i] + offsetVec;
-                faceLeft.vertices[i].color = color;
-
-                faceBack.vertices[i].position = backFace[i] + offsetVec;
-                faceBack.vertices[i].color = color;
-
-                faceRight.vertices[i].position = rightFace[i] + offsetVec;
-                faceRight.vertices[i].color = color;
-
-                faceTop.vertices[i].position = topFace[i] + offsetVec;
-                faceTop.vertices[i].color = color;
-
-                faceBottom.vertices[i].position = bottomFace[i] + offsetVec;
-                faceBottom.vertices[i].color = color;
-            }
-
-            mesh.push_back(faceFront);
-            mesh.push_back(faceLeft);
-            mesh.push_back(faceBack);
-            mesh.push_back(faceRight);
-            mesh.push_back(faceTop);
-            mesh.push_back(faceBottom);
+                glm::vec3 color = blockColors[blocks[z][y][x]] ;
+                for (int i = 0; i < 6; i++) {
+                    if (shouldRenderFace[i]) {
+                        Face face;
+                        for (int j = 0; j < 6; j++) {
+                            glm::vec3 vertexPos = faceVertices[i][j] + offsetVec;
+                            face.vertices[j].position = vertexPos;
+                            face.vertices[j].color = color;
+                        }
+                        mesh.push_back(face);
+                    }
+                }
 
         }
     }

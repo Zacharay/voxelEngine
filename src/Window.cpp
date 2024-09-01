@@ -30,7 +30,7 @@ Window::Window() : m_window(nullptr) {
     }
 
     glViewport(0, 0, Config::windowWidth, Config::windowHeight);
-    glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
 }
 
 // Destructor
@@ -60,6 +60,7 @@ void Window::calculateFps() {
 
 void Window::run()  {
     glEnable(GL_DEPTH_TEST);
+    glfwSwapInterval(0);
     while (!glfwWindowShouldClose(m_window)) {
 
         glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);

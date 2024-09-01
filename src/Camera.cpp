@@ -13,7 +13,7 @@ Camera::Camera(glm::vec3 position, glm::vec3 front, glm::vec3 up) {
 
 }
 void Camera::processKeyboardInput(Camera_Movement direction, float deltaTime) {
-    const float cameraSpeed = 2.5f * deltaTime;
+    const float cameraSpeed = 20.0f * deltaTime;
 
     glm::vec3 right = glm::normalize(glm::cross(m_front, m_up));
 
