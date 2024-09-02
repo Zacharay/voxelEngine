@@ -27,15 +27,26 @@ constexpr std::array<glm::vec3, BlockTypeCount> blockColors = {{
 class Chunk {
     unsigned char blocks[Config::chunkSize][Config::chunkSize][Config::chunkSize];
 
+    Chunk *m_chunkNx;
+    Chunk *m_chunkPx;
+    Chunk *m_chunkNy;
+    Chunk *m_chunkPy;
+    Chunk *m_chunkNz;
+    Chunk *m_chunkPz;
+
 
     std::vector<Face> mesh;
 
+
+    int countVertexNeighbors(const glm::vec3& vertexPos) const ;
+public:
     const int m_chunkPositionX;
     const int m_chunkPositionY;
     const int m_chunkPositionZ;
-    int countVertexNeighbors(const glm::vec3& vertexPos) const ;
-public:
     Chunk(int x,int y,int z,BlockType block);
     void generateMesh();
+
+    void setNeighboursChunks(Chunk *chunkNx,Chunk *chunkPx,Chunk* chunkNy,Chunk *chunkPy,Chunk *chunkNz,Chunk *chunkPz);
+
     const std::vector<Face> &getMesh()const;
 };

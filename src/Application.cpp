@@ -67,22 +67,17 @@ void Application::processInput(float deltaTime) {
 
 
 void Application::onRender() {
-
-    const std::vector<Chunk> &chunks = world->getChunks();
+    const ChunkMap &chunks = world->getChunks();
+    int counter = 0;
 
     meshRenderer->setViewMatrix(camera->getViewMatrix());
-    for(const Chunk &chunk : chunks) {
+
+    for (const auto& pair : chunks) {
+        const Chunk &chunk = pair.second;
         std::vector<Face> faces = chunk.getMesh();
+        counter += faces.size();
         meshRenderer->renderMesh(faces);
-        /*for(Face face : faces) {
-            for(int i=0;i<6;i++) {
-                std::cout<<face.vertexPositions[i].x<<" "<<face.vertexPositions[i].y<<" "<<face.vertexPositions[i].z<<" "<<std::endl;
-            }
-        }*/
-        //std::cout<<std::endl;
-
     }
-
 
 }
 void Application::onUpdate() {
