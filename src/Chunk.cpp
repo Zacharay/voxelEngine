@@ -39,28 +39,22 @@ Chunk::Chunk(const int x,const int y,const int z,BlockType block):blocks{},
     m_chunkPositionY(y),
     m_chunkPositionZ(z)
 {
-    if(block==Air) {
-        for(int j=0;j<Config::chunkSize;j++)
-        for(int i=j;i<Config::chunkSize;i++)
-                for(int k=j;k<Config::chunkSize;k++) {
-
-                    blocks[i][j][k] = Grass;
-                }
-    }
-    else {
         for(int i=0;i<Config::chunkSize;i++)
             for(int j=0;j<Config::chunkSize;j++)
                 for(int k=0;k<Config::chunkSize;k++) {
-                    int a  = (i+j+k)%3+1;
-                    BlockType b = (BlockType)a;
-                    blocks[i][j][k] = b;
+                    int b = (i+j)%3+1;
+                    if(block==Air) {
+                        blocks[i][j][k] = Air;
+                        continue;
+                    }
+                    blocks[i][j][k] = (BlockType)b;
                 }
-    }
-
-
 }
 
-void Chunk::generateMesh() {
+
+
+
+void Chunk::generateMesh(std::vector<Face>&mesh) {
     for(int z=0;z<Config::chunkSize;z++)
         for(int y=0;y<Config::chunkSize;y++) {
             for(int x=0;x<Config::chunkSize;x++) {
@@ -191,10 +185,4 @@ void Chunk::setNeighboursChunks(Chunk *chunkNx,Chunk *chunkPx,Chunk* chunkNy,Chu
     m_chunkPy = chunkPy;
     m_chunkNz = chunkNz;
     m_chunkPz = chunkPz;
-}
-
-const std::vector<Face> &Chunk::getMesh()const {
-
-
-    return mesh;
 }

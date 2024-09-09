@@ -6,29 +6,26 @@
 
 World::World() {
 
-    constexpr int radius = 8;
+    constexpr int radius = 1;
+
+    int height = 1;
+
     for(int x = -radius; x <= radius; x++) {
         for(int z = -radius; z <= radius; z++) {
-            for(int y = -radius; y <= radius; y++) {
-                m_chunks.insert({glm::ivec3(x,y,z),Chunk(x,y,z,BlockType::Grass)});
-            }
-
+                m_chunks.insert({glm::ivec2(x,z),ChunkColumn(height,x,z)});
+                height += 1;
         }
     }
 
-    m_chunks.insert({glm::ivec3(2,0,2),Chunk(2,0,2,BlockType::Air)});
 
-
-    setNeighbours();
-
+   // setNeighbours();
+/*
     for(auto &pair:m_chunks) {
         Chunk &chunk = pair.second;
         chunk.generateMesh();
     }
+*/
 
-
-
-    
 
 }
 
@@ -36,7 +33,7 @@ World::World() {
 World::~World() {
 
 }
-
+/*
 void World::setNeighbours() {
     for(auto& pair : m_chunks) {
         glm::ivec3 pos = pair.first;
@@ -89,7 +86,7 @@ void World::setNeighbours() {
         chunk.setNeighboursChunks(chunkNx, chunkPx, chunkNy, chunkPy, chunkNz, chunkPz);
     }
 }
-
+*/
 const ChunkMap &World::getChunks()const {
     return m_chunks;
 }

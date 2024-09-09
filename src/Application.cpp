@@ -73,12 +73,12 @@ void Application::onRender() {
     meshRenderer->setViewMatrix(camera->getViewMatrix());
 
     for (const auto& pair : chunks) {
-        const Chunk &chunk = pair.second;
+        const ChunkColumn &chunk = pair.second;
         std::vector<Face> faces = chunk.getMesh();
         counter += faces.size();
         meshRenderer->renderMesh(faces);
     }
-
+    std::cout<<counter<<std::endl;
 }
 void Application::onUpdate() {
     float currentFrame = glfwGetTime();
