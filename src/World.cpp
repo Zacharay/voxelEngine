@@ -6,7 +6,7 @@
 
 World::World() {
 
-    constexpr int radius = 1;
+    constexpr int radius = 8;
 
     int height = 1;
 
@@ -18,13 +18,13 @@ World::World() {
     }
 
 
-   // setNeighbours();
-/*
+    setNeighbours();
+
     for(auto &pair:m_chunks) {
-        Chunk &chunk = pair.second;
+        ChunkColumn &chunk = pair.second;
         chunk.generateMesh();
     }
-*/
+
 
 
 }
@@ -33,60 +33,48 @@ World::World() {
 World::~World() {
 
 }
-/*
+
 void World::setNeighbours() {
     for(auto& pair : m_chunks) {
-        glm::ivec3 pos = pair.first;
-        Chunk& chunk = pair.second;
+        glm::ivec2 pos = pair.first;
+        ChunkColumn& chunkColumn = pair.second;
 
 
-        Chunk* chunkNx = nullptr;
-        Chunk* chunkPx = nullptr;
-        Chunk* chunkNy = nullptr;
-        Chunk* chunkPy = nullptr;
-        Chunk* chunkNz = nullptr;
-        Chunk* chunkPz = nullptr;
+        ChunkColumn* chunkNx = nullptr;
+        ChunkColumn* chunkPx = nullptr;
+        ChunkColumn* chunkNz = nullptr;
+        ChunkColumn* chunkPz = nullptr;
 
 
-        auto itNx = m_chunks.find(glm::ivec3(pos.x - 1, pos.y, pos.z));
+        auto itNx = m_chunks.find(glm::ivec2(pos.x - 1,  pos.y));
         if (itNx != m_chunks.end()) {
             chunkNx = &(itNx->second);
         }
 
 
-        auto itPx = m_chunks.find(glm::ivec3(pos.x + 1, pos.y, pos.z));
+        auto itPx = m_chunks.find(glm::ivec2(pos.x + 1,  pos.y));
         if (itPx != m_chunks.end()) {
             chunkPx = &(itPx->second);
         }
 
 
-        auto itNy = m_chunks.find(glm::ivec3(pos.x, pos.y - 1, pos.z));
-        if (itNy != m_chunks.end()) {
-            chunkNy = &(itNy->second);
-        }
 
-
-        auto itPy = m_chunks.find(glm::ivec3(pos.x, pos.y + 1, pos.z));
-        if (itPy != m_chunks.end()) {
-            chunkPy = &(itPy->second);
-        }
-
-        auto itNz = m_chunks.find(glm::ivec3(pos.x, pos.y, pos.z - 1));
+        auto itNz = m_chunks.find(glm::ivec2(pos.x,  pos.y - 1));
         if (itNz != m_chunks.end()) {
             chunkNz = &(itNz->second);
 
         }
 
 
-        auto itPz = m_chunks.find(glm::ivec3(pos.x, pos.y, pos.z + 1));
+        auto itPz = m_chunks.find(glm::ivec2(pos.x,pos.y + 1));
         if (itPz != m_chunks.end()) {
             chunkPz = &(itPz->second);
         }
 
-        chunk.setNeighboursChunks(chunkNx, chunkPx, chunkNy, chunkPy, chunkNz, chunkPz);
+        chunkColumn.setNeighbouringChunks(chunkNx, chunkPx, chunkNz, chunkPz);
     }
 }
-*/
+
 const ChunkMap &World::getChunks()const {
     return m_chunks;
 }

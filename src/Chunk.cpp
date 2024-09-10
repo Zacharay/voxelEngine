@@ -54,114 +54,101 @@ Chunk::Chunk(const int x,const int y,const int z,BlockType block):blocks{},
 
 
 
-void Chunk::generateMesh(std::vector<Face>&mesh) {
-    for(int z=0;z<Config::chunkSize;z++)
-        for(int y=0;y<Config::chunkSize;y++) {
-            for(int x=0;x<Config::chunkSize;x++) {
+void Chunk::generateMesh(std::vector<Face>& mesh, Chunk* chunkNx, Chunk* chunkPx, Chunk* chunkNy, Chunk* chunkPy, Chunk* chunkNz, Chunk* chunkPz) {
+    for (int z = 0; z < Config::chunkSize; z++) {
+        for (int y = 0; y < Config::chunkSize; y++) {
+            for (int x = 0; x < Config::chunkSize; x++) {
 
-                if(blocks[z][y][x]==BlockType::Air)continue;
-
-
+                if (blocks[z][y][x] == BlockType::Air) continue;
 
                 glm::vec3 offsetVec = glm::vec3(
-                static_cast<float>(m_chunkPositionX)*16.0f+x,
-                static_cast<float>(m_chunkPositionY)*16.0f+y,
-                static_cast<float>(m_chunkPositionZ)*16.0f+z);
+                    static_cast<float>(m_chunkPositionX) * 16.0f + x,
+                    static_cast<float>(m_chunkPositionY) * 16.0f + y,
+                    static_cast<float>(m_chunkPositionZ) * 16.0f + z
+                );
 
-                bool shouldRenderFace[6] = {false};
+                bool shouldRenderFace[6] = { false };
 
-                if(z + 1 == Config::chunkSize) {
-                    if(m_chunkPz == nullptr) {
+                // Check front face (Z+)
+                if (z + 1 == Config::chunkSize) {
+                    if (chunkPz == nullptr) {
+                        shouldRenderFace[Front] = true;
+                    } else {
+                        shouldRenderFace[Front] = chunkPz->blocks[0][y][x] == BlockType::Air;
+                    }
+                } else {
+                    if (blocks[z + 1][y][x] == BlockType::Air) {
                         shouldRenderFace[Front] = true;
                     }
-                    else {
-                        shouldRenderFace[Front] = m_chunkPz->blocks[0][y][x]==BlockType::Air;
-                    }
-
-                }
-                else {
-                    if(blocks[z+1][y][x] == 0)
-                        shouldRenderFace[Front]=true;
                 }
 
-                if(z==0) {
-                    if(m_chunkNz == nullptr) {
+                // Check back face (Z-)
+                if (z == 0) {
+                    if (chunkNz == nullptr) {
                         shouldRenderFace[Back] = true;
+                    } else {
+                        shouldRenderFace[Back] = chunkNz->blocks[Config::chunkSize - 1][y][x] == BlockType::Air;
                     }
-                    else {
-                        shouldRenderFace[Back] = m_chunkNz->blocks[Config::chunkSize-2][y][x]==BlockType::Air;
-                    }
-
-                }
-                else {
-                    if(blocks[z-1][y][x] == 0) {
+                } else {
+                    if (blocks[z - 1][y][x] == BlockType::Air) {
                         shouldRenderFace[Back] = true;
                     }
                 }
 
-
-                if(x==0) {
-
-                    if(m_chunkNx == nullptr) {
+                // Check left face (X-)
+                if (x == 0) {
+                    if (chunkNx == nullptr) {
+                        shouldRenderFace[Left] = true;
+                    } else {
+                        shouldRenderFace[Left] = chunkNx->blocks[z][y][Config::chunkSize - 1] == BlockType::Air;
+                    }
+                } else {
+                    if (blocks[z][y][x - 1] == BlockType::Air) {
                         shouldRenderFace[Left] = true;
                     }
-                    else {
-                        shouldRenderFace[Left] = m_chunkNx->blocks[z][y][Config::chunkSize-2]==BlockType::Air;
+                }
+
+                // Check right face (X+)
+                if (x + 1 == Config::chunkSize) {
+                    if (chunkPx == nullptr) {
+                        shouldRenderFace[Right] = true;
+                    } else {
+                        shouldRenderFace[Right] = chunkPx->blocks[z][y][0] == BlockType::Air;
                     }
-
-                }
-                else {
-                    if(blocks[z][y][x - 1] == 0)
-                        shouldRenderFace[Left] = true;
-                }
-
-
-                if(x + 1 == Config::chunkSize) {
-                    if(m_chunkPx == nullptr) {
+                } else {
+                    if (blocks[z][y][x + 1] == BlockType::Air) {
                         shouldRenderFace[Right] = true;
                     }
-                    else {
-                        shouldRenderFace[Right] = m_chunkPx->blocks[z][y][0]==BlockType::Air;
+                }
+
+                // Check top face (Y+)
+                if (y + 1 == Config::chunkSize) {
+                    if (chunkPy == nullptr) {
+                        shouldRenderFace[Top] = true;
+                    } else {
+                        shouldRenderFace[Top] = chunkPy->blocks[z][0][x] == BlockType::Air;
                     }
-
-                }
-                else {
-                    if(blocks[z][y][x + 1] == 0)
-                        shouldRenderFace[Right]=true;
-                }
-
-
-                if(y + 1 == Config::chunkSize) {
-                    if(m_chunkPy == nullptr) {
+                } else {
+                    if (blocks[z][y + 1][x] == BlockType::Air) {
                         shouldRenderFace[Top] = true;
                     }
-                    else {
-                        shouldRenderFace[Top] = m_chunkPy->blocks[z][0][x]==BlockType::Air;
-                    }
-                }
-                else {
-                    if(blocks[z][y+1][x] == 0)
-                        shouldRenderFace[Top]=true;
                 }
 
-
-                if(y==0) {
-                    if(m_chunkNy == nullptr) {
+                // Check bottom face (Y-)
+                if (y == 0) {
+                    if (chunkNy == nullptr) {
                         shouldRenderFace[Bottom] = true;
+                    } else {
+                        shouldRenderFace[Bottom] = chunkNy->blocks[z][Config::chunkSize - 1][x] == BlockType::Air;
                     }
-                    else {
-                        shouldRenderFace[Bottom] = m_chunkNy->blocks[z][Config::chunkSize-2][x]==BlockType::Air;
-                    }
-
-                }
-                else {
-                    if(blocks[z][y-1][x] == 0) {
+                } else {
+                    if (blocks[z][y - 1][x] == BlockType::Air) {
                         shouldRenderFace[Bottom] = true;
                     }
                 }
 
-
-                glm::vec3 color = blockColors[blocks[z][y][x]] ;
+                // Create faces for the visible sides
+                glm::vec3 color = blockColors[blocks[z][y][x]];
                 for (int i = 0; i < 6; i++) {
                     if (shouldRenderFace[i]) {
                         Face face;
@@ -173,16 +160,9 @@ void Chunk::generateMesh(std::vector<Face>&mesh) {
                         mesh.push_back(face);
                     }
                 }
-
+            }
         }
     }
+}
 
-}
-void Chunk::setNeighboursChunks(Chunk *chunkNx,Chunk *chunkPx,Chunk* chunkNy,Chunk *chunkPy,Chunk *chunkNz,Chunk *chunkPz) {
-    m_chunkNx = chunkNx;
-    m_chunkPx = chunkPx;
-    m_chunkNy = chunkNy;
-    m_chunkPy = chunkPy;
-    m_chunkNz = chunkNz;
-    m_chunkPz = chunkPz;
-}
+

@@ -22,7 +22,7 @@ using ChunkMap = std::unordered_map<glm::ivec2, ChunkColumn>;
 class World {
 private:
     ChunkMap m_chunks;
-    //void setNeighbours();
+    void setNeighbours();
 public:
 
     World();
