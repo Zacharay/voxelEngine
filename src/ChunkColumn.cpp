@@ -1,29 +1,54 @@
 #include "ChunkColumn.hpp"
-
+#include "Config.hpp"
 #include <iostream>
 
-ChunkColumn::ChunkColumn(int height,int x,int z) {
+ChunkColumn::ChunkColumn(const std::array<std::array<unsigned int,Config::noiseWidth>,Config::noiseWidth> &noiseData,int x,int z) {
 
     m_posX = x;
     m_posZ = z;
-    for(int i=0;i<16;i++) {
-        BlockType block;
-
-        if(i > height) {
-            block = BlockType::Air;
-        }
-        else {
-            if(i < 4 ) {
-                block = BlockType::Stone;
-            }
-            else {
-                block = BlockType::Grass;
-            }
-        }
-        m_chunks.emplace_back(m_posX,i,m_posZ,block);
+    for(int i=0;i < Config::chunkColumnHeight ;i++) {
+        m_chunks.emplace_back(m_posX,i,m_posZ);
     }
 
 
+
+    //todo calculate this offsets properly
+    int offsetX = m_posX * Config::chunkSize +256;
+    int offsetZ = m_posZ * Config::chunkSize +256;
+    for(int x=0;x<Config::chunkSize;x++)
+        for(int z=0;z<Config::chunkSize;z++) {
+
+
+            const int noiseVal = noiseData[offsetX + x][offsetZ+z];
+
+
+            for(int y=0;y<=noiseVal;y++) {
+
+                const int chunkYPos = y/16;
+
+
+                BlockType block;
+                if(y<60) {
+                    block = BlockType::Stone;
+                }
+                else if(y > 60 && y < 75) {
+                    block= BlockType::Sand;
+                }
+                else {
+                    block = BlockType::Grass;
+                }
+
+
+
+                m_chunks[chunkYPos].setBlock(block,x,y - chunkYPos*Config::chunkSize,z);
+
+
+
+
+            }
+
+
+        }
 
 
 }

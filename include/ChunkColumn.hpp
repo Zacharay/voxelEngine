@@ -18,7 +18,7 @@ class ChunkColumn {
     std::vector<Face> m_mesh;
 
     public:
-    ChunkColumn(int height,int x,int z);
+    ChunkColumn(const std::array<std::array<unsigned int,Config::noiseWidth>,Config::noiseWidth> &noiseData,int x,int z);
 
     void generateMesh();
 

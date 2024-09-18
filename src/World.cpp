@@ -1,19 +1,45 @@
-
 #include "World.hpp"
 #include "FastNoiseLite.h"
 #include <iostream>
+#include <Config.hpp>
 
 
 World::World() {
 
-    constexpr int radius = 8;
 
-    int height = 1;
 
-    for(int x = -radius; x <= radius; x++) {
-        for(int z = -radius; z <= radius; z++) {
-                m_chunks.insert({glm::ivec2(x,z),ChunkColumn(height,x,z)});
-                height += 1;
+
+    FastNoiseLite noise;
+
+    noise.SetNoiseType(FastNoiseLite::NoiseType_Perlin);
+
+    std::array<std::array<unsigned int, Config::noiseWidth>, Config::noiseWidth> noiseData={{}} ;
+
+
+    float min = FLT_MAX;
+    for(int y=0;y< Config::noiseWidth;y++) {
+        for(int x=0;x< Config::noiseWidth;x++) {
+
+            const float noiseVal = noise.GetNoise(static_cast<float>(x), static_cast<float>(y)) + 1.0f;
+
+            const unsigned int blockHeight = (noiseVal / 2.0f) * Config::chunkMaxBlockHeight;
+
+
+            noiseData[y][x] = blockHeight;
+
+
+
+        }
+
+    }
+
+
+
+
+
+    for(int x = -Config::chunkRadius; x < Config::chunkRadius; x++) {
+        for(int z = -Config::chunkRadius; z < Config::chunkRadius; z++) {
+                m_chunks.insert({glm::ivec2(x,z),ChunkColumn(noiseData,x,z)});
         }
     }
 

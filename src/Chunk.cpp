@@ -34,7 +34,7 @@ constexpr std::array<std::array<glm::vec3, 6>, 6> faceVertices = {{
       glm::vec3(0.5f, -0.5f, -0.5f), glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(-0.5f, -0.5f, 0.5f) }
 }};
 
-Chunk::Chunk(const int x,const int y,const int z,BlockType block):blocks{},
+Chunk::Chunk(const int x,const int y,const int z):blocks{},
     m_chunkPositionX(x),
     m_chunkPositionY(y),
     m_chunkPositionZ(z)
@@ -42,17 +42,15 @@ Chunk::Chunk(const int x,const int y,const int z,BlockType block):blocks{},
         for(int i=0;i<Config::chunkSize;i++)
             for(int j=0;j<Config::chunkSize;j++)
                 for(int k=0;k<Config::chunkSize;k++) {
-                    int b = (i+j)%3+1;
-                    if(block==Air) {
-                        blocks[i][j][k] = Air;
-                        continue;
-                    }
-                    blocks[i][j][k] = (BlockType)b;
+
+                    blocks[i][j][k] = BlockType::Air;
                 }
 }
 
 
-
+void Chunk::setBlock(BlockType block,int x,int y,int z) {
+    blocks[z][y][x] = block;
+}
 
 void Chunk::generateMesh(std::vector<Face>& mesh, Chunk* chunkNx, Chunk* chunkPx, Chunk* chunkNy, Chunk* chunkPy, Chunk* chunkNz, Chunk* chunkPz) {
     for (int z = 0; z < Config::chunkSize; z++) {

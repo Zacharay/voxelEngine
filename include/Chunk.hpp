@@ -32,7 +32,9 @@ public:
     const int m_chunkPositionX;
     const int m_chunkPositionY;
     const int m_chunkPositionZ;
-    Chunk(int x,int y,int z,BlockType block);
+    Chunk(int x,int y,int z);
+
+    void setBlock(BlockType block,int x,int y,int z);
     void generateMesh(std::vector<Face>&mesh, Chunk* chunkNx,Chunk* chunkPx,Chunk* chunkNy, Chunk* chunkPy,Chunk* chunkNz,Chunk* chunkPz);
 
 

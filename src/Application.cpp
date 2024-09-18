@@ -7,7 +7,7 @@
 
 static float lastX = 450.0f,lastY=450.0f;
 bool firstMouse = true;
-std::unique_ptr<Camera> camera= std::unique_ptr<Camera>(new Camera(glm::vec3(0.0f, 0.0f, 3.0f), glm::vec3(0.0f, 0.0f, -1.0f),glm::vec3(0.0f,1.0f,0.0f)));
+std::unique_ptr<Camera> camera= std::unique_ptr<Camera>(new Camera(glm::vec3(0.0f, 200.0f, 5000f), glm::vec3(0.0f, 0.0f, -1.0f),glm::vec3(0.0f,1.0f,0.0f)));
 
 
 
@@ -19,7 +19,7 @@ static void mouse_callback(GLFWwindow* window, double xPos,double yPos) {
     }
 
     float xOffset = xPos - lastX;
-    float yOffset = lastY - yPos; // reversed since y-coordinates range from bottom to top
+    float yOffset = lastY - yPos;
     lastX = xPos;
     lastY = yPos;
 
@@ -78,7 +78,7 @@ void Application::onRender() {
         counter += faces.size();
         meshRenderer->renderMesh(faces);
     }
-    std::cout<<counter<<std::endl;
+
 }
 void Application::onUpdate() {
     float currentFrame = glfwGetTime();
