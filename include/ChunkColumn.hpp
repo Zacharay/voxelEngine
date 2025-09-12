@@ -4,6 +4,7 @@
 
 
 class ChunkColumn {
+    unsigned int m_VAO,m_VBO;
 
     int m_posX;
     int m_posZ;
@@ -18,10 +19,10 @@ class ChunkColumn {
     std::vector<Face> m_mesh;
 
     public:
-    ChunkColumn(const std::array<std::array<unsigned int,Config::noiseWidth>,Config::noiseWidth> &noiseData,int x,int z);
+    ChunkColumn(const std::vector<std::vector<unsigned int>> &noiseData,int x,int z);
 
     void generateMesh();
-
+    void bindMesh()const;
     void setNeighbouringChunks(ChunkColumn* chunkNx,ChunkColumn* chunkPx,ChunkColumn* chunkNz,ChunkColumn* chunkPz);
     const std::vector<Face>& getMesh()const;
     Chunk *getChunk(int height);

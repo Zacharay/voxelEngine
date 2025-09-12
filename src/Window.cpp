@@ -2,8 +2,6 @@
 #include <iostream>
 #include "Config.hpp"
 
-
-
 // Constructor
 Window::Window() : m_window(nullptr) {
 

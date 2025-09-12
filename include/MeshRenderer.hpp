@@ -3,14 +3,8 @@
 #include <glm/vec3.hpp>
 #include <Shader.hpp>
 #include <vector>
+#include <World.hpp>
 
-struct Vertex {
-    glm::vec3 position;
-    glm::vec3 color;
-};
-struct Face {
-    Vertex vertices[6];
-};
 
 
 
@@ -22,7 +16,7 @@ class MeshRenderer {
     public:
     MeshRenderer();
 
-    void renderMesh(const std::vector<Face>&faces)const;
+    void renderChunks(const ChunkMap &chunks)const;
     void setViewMatrix(const glm::mat4 &viewMatrix);
 
 };

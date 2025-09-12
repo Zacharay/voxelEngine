@@ -1,31 +1,29 @@
 #include "ChunkColumn.hpp"
 #include "Config.hpp"
+#include "glad/glad.h"
 #include <iostream>
 
-ChunkColumn::ChunkColumn(const std::array<std::array<unsigned int,Config::noiseWidth>,Config::noiseWidth> &noiseData,int x,int z) {
+
+ChunkColumn::ChunkColumn(const std::vector<std::vector<unsigned int>> &noiseData,int x,int z) {
 
     m_posX = x;
     m_posZ = z;
+    m_chunks.reserve(Config::chunkColumnHeight);
     for(int i=0;i < Config::chunkColumnHeight ;i++) {
         m_chunks.emplace_back(m_posX,i,m_posZ);
     }
 
-
-
-    //todo calculate this offsets properly
-    int offsetX = m_posX * Config::chunkSize +256;
-    int offsetZ = m_posZ * Config::chunkSize +256;
+    int offsetX = m_posX * Config::chunkSize + Config::noiseWidth / 2;
+    int offsetZ = m_posZ * Config::chunkSize + Config::noiseWidth / 2;
     for(int x=0;x<Config::chunkSize;x++)
         for(int z=0;z<Config::chunkSize;z++) {
 
 
             const int noiseVal = noiseData[offsetX + x][offsetZ+z];
 
-
             for(int y=0;y<=noiseVal;y++) {
 
-                const int chunkYPos = y/16;
-
+                const int chunkYPos = y/Config::chunkSize;
 
                 BlockType block;
                 if(y<60) {
@@ -35,15 +33,20 @@ ChunkColumn::ChunkColumn(const std::array<std::array<unsigned int,Config::noiseW
                     block= BlockType::Sand;
                 }
                 else {
-                    block = BlockType::Grass;
+
+                    if((x+z)%2 == 0) {
+                        block = BlockType::Grass;
+                    }
+                    else {
+                        block = BlockType::Dirt;
+                    }
+
+
                 }
 
 
 
                 m_chunks[chunkYPos].setBlock(block,x,y - chunkYPos*Config::chunkSize,z);
-
-
-
 
             }
 
@@ -77,7 +80,19 @@ void ChunkColumn::generateMesh() {
             );
 
     }
+    glGenVertexArrays(1, &m_VAO);
+    glGenBuffers(1, &m_VBO);
+    glBindVertexArray(m_VAO);
 
+
+    glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
+    glBufferData(GL_ARRAY_BUFFER, m_mesh.size() * sizeof(Face), m_mesh.data(), GL_STATIC_DRAW);
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
+
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(3 * sizeof(float)));
 }
 void ChunkColumn::setNeighbouringChunks(ChunkColumn* chunkNx,ChunkColumn* chunkPx,ChunkColumn* chunkNz,ChunkColumn* chunkPz) {
     m_nbrChunkColumnNX = chunkNx;;
@@ -85,7 +100,9 @@ void ChunkColumn::setNeighbouringChunks(ChunkColumn* chunkNx,ChunkColumn* chunkP
     m_nbrChunkColumnPZ = chunkPz;
     m_nbrChunkColumnNZ = chunkNz;
 }
-
+void ChunkColumn::bindMesh()const {
+    glBindVertexArray(m_VAO);
+}
 const std::vector<Face>& ChunkColumn::getMesh()const {
     return m_mesh;
 }

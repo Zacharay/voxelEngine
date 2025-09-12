@@ -7,8 +7,7 @@
 
 static float lastX = 450.0f,lastY=450.0f;
 bool firstMouse = true;
-std::unique_ptr<Camera> camera= std::unique_ptr<Camera>(new Camera(glm::vec3(0.0f, 200.0f, 5000f), glm::vec3(0.0f, 0.0f, -1.0f),glm::vec3(0.0f,1.0f,0.0f)));
-
+std::unique_ptr<Camera> camera= std::unique_ptr<Camera>(new Camera(glm::vec3(0.0f, 200.0f, 500.0f), glm::vec3(0.0f, 0.0f, -1.0f),glm::vec3(0.0f,1.0f,0.0f)));
 
 
 static void mouse_callback(GLFWwindow* window, double xPos,double yPos) {
@@ -68,16 +67,9 @@ void Application::processInput(float deltaTime) {
 
 void Application::onRender() {
     const ChunkMap &chunks = world->getChunks();
-    int counter = 0;
 
     meshRenderer->setViewMatrix(camera->getViewMatrix());
-
-    for (const auto& pair : chunks) {
-        const ChunkColumn &chunk = pair.second;
-        std::vector<Face> faces = chunk.getMesh();
-        counter += faces.size();
-        meshRenderer->renderMesh(faces);
-    }
+    meshRenderer->renderChunks(chunks);
 
 }
 void Application::onUpdate() {
@@ -86,4 +78,17 @@ void Application::onUpdate() {
     m_lastFrame = currentFrame;
 
     processInput(deltaTime);
+
+    glm::vec3 playerPos = camera->getPosition();
+
+    int playerChunkX = playerPos.x / Config::chunkSize;
+    int playerChunkZ = playerPos.z / Config::chunkSize;
+
+    for(int x = playerChunkX - Config::chunkRadius; x < playerChunkX + Config::chunkRadius; x++) {
+        for( int z = playerChunkZ - Config::chunkRadius; z < playerChunkZ + Config::chunkRadius; z++) {
+
+        }
+    }
+    std::cout<<playerChunkX<<" "<<playerChunkZ<<std::endl;
+
 }

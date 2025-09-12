@@ -27,5 +27,6 @@ public:
     void processKeyboardInput(Camera_Movement movement,float deltaTime);
     void processMouseInput(float xOffset, float yOffset);
     glm::mat4 getViewMatrix()const;
+    glm::vec3 getPosition()const;
 
 };

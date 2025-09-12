@@ -5,6 +5,7 @@
 #include <vector>
 #include "Chunk.hpp"
 #include "ChunkColumn.hpp"
+#include "glm/vec2.hpp"
 
 namespace std {
     template <>

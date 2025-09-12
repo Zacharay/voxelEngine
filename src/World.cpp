@@ -2,54 +2,43 @@
 #include "FastNoiseLite.h"
 #include <iostream>
 #include <Config.hpp>
+#include <cfloat>
 
 
 World::World() {
-
-
-
-
     FastNoiseLite noise;
 
     noise.SetNoiseType(FastNoiseLite::NoiseType_Perlin);
+    noise.SetFrequency(0.0015f);
 
-    std::array<std::array<unsigned int, Config::noiseWidth>, Config::noiseWidth> noiseData={{}} ;
-
-
-    float min = FLT_MAX;
-    for(int y=0;y< Config::noiseWidth;y++) {
-        for(int x=0;x< Config::noiseWidth;x++) {
-
-            const float noiseVal = noise.GetNoise(static_cast<float>(x), static_cast<float>(y)) + 1.0f;
-
-            const unsigned int blockHeight = (noiseVal / 2.0f) * Config::chunkMaxBlockHeight;
-
-
-            noiseData[y][x] = blockHeight;
-
-
-
-        }
-
-    }
-
-
-
-
-
-    for(int x = -Config::chunkRadius; x < Config::chunkRadius; x++) {
-        for(int z = -Config::chunkRadius; z < Config::chunkRadius; z++) {
-                m_chunks.insert({glm::ivec2(x,z),ChunkColumn(noiseData,x,z)});
-        }
-    }
-
-
-    setNeighbours();
-
-    for(auto &pair:m_chunks) {
-        ChunkColumn &chunk = pair.second;
-        chunk.generateMesh();
-    }
+    // std::vector<std::vector<unsigned int>> noiseData(Config::noiseWidth, std::vector<unsigned int>(Config::noiseWidth, 0));
+    //
+    // for(int z=0;z< Config::noiseWidth;z++) {
+    //     for(int x=0;x< Config::noiseWidth;x++) {
+    //
+    //         const float noiseVal = noise.GetNoise(static_cast<float>(x), static_cast<float>(z)) + 1.0f;
+    //
+    //         const unsigned int blockHeight = (noiseVal / 2.0f) * Config::chunkMaxBlockHeight;
+    //
+    //         noiseData[z][x] = blockHeight;
+    //
+    //     }
+    //
+    // }
+    //
+    // for(int chunkPosX = -Config::chunkRadius; chunkPosX < Config::chunkRadius; chunkPosX++) {
+    //     for(int chunkPosZ = -Config::chunkRadius; chunkPosZ < Config::chunkRadius; chunkPosZ++) {
+    //             m_chunks.insert({glm::ivec2(chunkPosX,chunkPosZ),ChunkColumn(noiseData,chunkPosX,chunkPosZ)});
+    //     }
+    // }
+    //
+    //
+    // setNeighbours();
+    //
+    // for(auto &pair:m_chunks) {
+    //     ChunkColumn &chunk = pair.second;
+    //     chunk.generateMesh();
+    // }
 
 
 

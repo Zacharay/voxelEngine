@@ -49,21 +49,26 @@ Chunk::Chunk(const int x,const int y,const int z):blocks{},
 
 
 void Chunk::setBlock(BlockType block,int x,int y,int z) {
+
     blocks[z][y][x] = block;
 }
+inline glm::vec3 Chunk::convertToWorldCoordinates(const glm::vec3 &coordinates) {
+    const glm::vec3 offsetVec = glm::vec3(
+                   static_cast<float>(m_chunkPositionX) * Config::chunkSize ,
+                   static_cast<float>(m_chunkPositionY) * Config::chunkSize ,
+                   static_cast<float>(m_chunkPositionZ) * Config::chunkSize );
 
+
+    return coordinates + offsetVec;
+
+}
 void Chunk::generateMesh(std::vector<Face>& mesh, Chunk* chunkNx, Chunk* chunkPx, Chunk* chunkNy, Chunk* chunkPy, Chunk* chunkNz, Chunk* chunkPz) {
-    for (int z = 0; z < Config::chunkSize; z++) {
+    for (int z= 0; z < Config::chunkSize; z++) {
         for (int y = 0; y < Config::chunkSize; y++) {
             for (int x = 0; x < Config::chunkSize; x++) {
 
                 if (blocks[z][y][x] == BlockType::Air) continue;
 
-                glm::vec3 offsetVec = glm::vec3(
-                    static_cast<float>(m_chunkPositionX) * 16.0f + x,
-                    static_cast<float>(m_chunkPositionY) * 16.0f + y,
-                    static_cast<float>(m_chunkPositionZ) * 16.0f + z
-                );
 
                 bool shouldRenderFace[6] = { false };
 
@@ -151,7 +156,7 @@ void Chunk::generateMesh(std::vector<Face>& mesh, Chunk* chunkNx, Chunk* chunkPx
                     if (shouldRenderFace[i]) {
                         Face face;
                         for (int j = 0; j < 6; j++) {
-                            glm::vec3 vertexPos = faceVertices[i][j] + offsetVec;
+                            glm::vec3 vertexPos = convertToWorldCoordinates(faceVertices[i][j]+ glm::vec3(x,y,z));
                             face.vertices[j].position = vertexPos;
                             face.vertices[j].color = color;
                         }
