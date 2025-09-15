@@ -81,14 +81,16 @@ void Application::onUpdate() {
 
     glm::vec3 playerPos = camera->getPosition();
 
-    int playerChunkX = playerPos.x / Config::chunkSize;
-    int playerChunkZ = playerPos.z / Config::chunkSize;
+     int playerChunkX = playerPos.x / Config::chunkSize;
+     int playerChunkZ = playerPos.z / Config::chunkSize;
 
-    for(int x = playerChunkX - Config::chunkRadius; x < playerChunkX + Config::chunkRadius; x++) {
-        for( int z = playerChunkZ - Config::chunkRadius; z < playerChunkZ + Config::chunkRadius; z++) {
+     for(int x = playerChunkX - Config::chunkRadius; x < playerChunkX + Config::chunkRadius; x++) {
+         for( int z = playerChunkZ - Config::chunkRadius; z < playerChunkZ + Config::chunkRadius; z++) {
+             world->loadChunk(x,z);
+         }
+     }
 
-        }
-    }
-    std::cout<<playerChunkX<<" "<<playerChunkZ<<std::endl;
+    world->unloadFarChunks(playerChunkX,playerChunkZ);
 
+    world->regenerateMeshes();
 }

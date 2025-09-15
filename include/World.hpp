@@ -1,5 +1,6 @@
 #pragma once
 
+#include <FastNoiseLite.h>
 #include <memory>
 #include <unordered_map>
 #include <vector>
@@ -22,11 +23,15 @@ using ChunkMap = std::unordered_map<glm::ivec2, ChunkColumn>;
 
 class World {
 private:
+    FastNoiseLite m_noise;
     ChunkMap m_chunks;
     void setNeighbours();
 public:
 
     World();
     ~World();
+    void loadChunk(int chunkPosX,int chunkPosZ);
+    void regenerateMeshes();
+    void unloadFarChunks(int playerChunkX,int playerChunkZ);
     const ChunkMap& getChunks() const;
 };

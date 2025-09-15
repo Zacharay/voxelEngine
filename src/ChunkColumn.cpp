@@ -1,10 +1,13 @@
 #include "ChunkColumn.hpp"
+
+#include <FastNoiseLite.h>
+
 #include "Config.hpp"
 #include "glad/glad.h"
 #include <iostream>
 
 
-ChunkColumn::ChunkColumn(const std::vector<std::vector<unsigned int>> &noiseData,int x,int z) {
+ChunkColumn::ChunkColumn(FastNoiseLite& m_noise,int x,int z) {
 
     m_posX = x;
     m_posZ = z;
@@ -13,15 +16,17 @@ ChunkColumn::ChunkColumn(const std::vector<std::vector<unsigned int>> &noiseData
         m_chunks.emplace_back(m_posX,i,m_posZ);
     }
 
-    int offsetX = m_posX * Config::chunkSize + Config::noiseWidth / 2;
-    int offsetZ = m_posZ * Config::chunkSize + Config::noiseWidth / 2;
+    int offsetX = m_posX * Config::chunkSize ;//+ Config::noiseWidth / 2;
+    int offsetZ = m_posZ * Config::chunkSize; //+ Config::noiseWidth / 2;
     for(int x=0;x<Config::chunkSize;x++)
         for(int z=0;z<Config::chunkSize;z++) {
 
+            const float noiseVal = m_noise.GetNoise(static_cast<float>(x+offsetX), static_cast<float>(z+offsetZ)) + 1.0f;
 
-            const int noiseVal = noiseData[offsetX + x][offsetZ+z];
+            const unsigned int blockHeight = (noiseVal / 2.0f) * Config::chunkMaxBlockHeight;
 
-            for(int y=0;y<=noiseVal;y++) {
+
+            for(int y=0;y<=blockHeight;y++) {
 
                 const int chunkYPos = y/Config::chunkSize;
 
@@ -44,8 +49,6 @@ ChunkColumn::ChunkColumn(const std::vector<std::vector<unsigned int>> &noiseData
 
                 }
 
-
-
                 m_chunks[chunkYPos].setBlock(block,x,y - chunkYPos*Config::chunkSize,z);
 
             }
@@ -55,8 +58,35 @@ ChunkColumn::ChunkColumn(const std::vector<std::vector<unsigned int>> &noiseData
 
 
 }
-
+ChunkColumn::~ChunkColumn() {
+    destroyGL();           // free VAO/VBO
+    m_mesh.clear();
+    m_mesh.shrink_to_fit();
+    m_chunks.clear();
+    m_chunks.shrink_to_fit();
+}
+void ChunkColumn::destroyGL() {
+    if (m_VBO) {
+        glDeleteBuffers(1, &m_VBO);
+        m_VBO = 0;
+    }
+    if (m_VAO) {
+        glDeleteVertexArrays(1, &m_VAO);
+        m_VAO = 0;
+    }
+}
 void ChunkColumn::generateMesh() {
+    m_mesh.clear();
+    m_mesh.shrink_to_fit();
+    if (m_VBO) {
+        glDeleteBuffers(1, &m_VBO);
+        m_VBO = 0;
+    }
+    if (m_VAO) {
+        glDeleteVertexArrays(1, &m_VAO);
+        m_VAO = 0;
+    }
+
     for(int i=0;i<16;i++) {
         Chunk &chunk = m_chunks[i];
 
@@ -93,12 +123,37 @@ void ChunkColumn::generateMesh() {
 
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(3 * sizeof(float)));
+
+    isMeshDirty = false;
 }
 void ChunkColumn::setNeighbouringChunks(ChunkColumn* chunkNx,ChunkColumn* chunkPx,ChunkColumn* chunkNz,ChunkColumn* chunkPz) {
     m_nbrChunkColumnNX = chunkNx;;
     m_nbrChunkColumnPX = chunkPx;
     m_nbrChunkColumnPZ = chunkPz;
     m_nbrChunkColumnNZ = chunkNz;
+}
+void ChunkColumn::disconnectNeighbours() {
+    if(m_nbrChunkColumnNX) {
+        m_nbrChunkColumnNX->setNeighbourPx(nullptr);
+        m_nbrChunkColumnNX->isMeshDirty = true;
+    }
+    if(m_nbrChunkColumnPX) {
+        m_nbrChunkColumnPX->setNeighbourNx(nullptr);
+        m_nbrChunkColumnPX->isMeshDirty = true;
+    }
+    if(m_nbrChunkColumnPZ) {
+        m_nbrChunkColumnPZ->setNeighbourNz(nullptr);
+        m_nbrChunkColumnPZ->isMeshDirty = true;
+    }
+    if(m_nbrChunkColumnNZ) {
+        m_nbrChunkColumnNZ->setNeighbourPz(nullptr);
+        m_nbrChunkColumnNZ->isMeshDirty = true;
+    }
+
+    m_nbrChunkColumnNX = nullptr;
+    m_nbrChunkColumnPX = nullptr;
+    m_nbrChunkColumnPZ = nullptr;
+    m_nbrChunkColumnNZ = nullptr;
 }
 void ChunkColumn::bindMesh()const {
     glBindVertexArray(m_VAO);

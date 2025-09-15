@@ -33,7 +33,7 @@ void MeshRenderer::renderChunks(const ChunkMap &chunks)const {
     for(auto &chunk : chunks) {
         chunk.second.bindMesh();
         glDrawArrays(GL_TRIANGLES, 0, chunk.second.getMesh().size() * 6 );
-        //counter +=  chunk.second.getMesh().size() ;
+       // counter +=  chunk.second.getMesh().size() ;
     }
     //std::cout<<counter<<std::endl;
 }
