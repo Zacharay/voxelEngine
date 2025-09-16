@@ -38,8 +38,11 @@ void Camera::processKeyboardInput(Camera_Movement direction, float deltaTime) {
 }
 
 void Camera::processMouseInput(float xOffset, float yOffset) {
-    yaw   += xOffset;
-    pitch += yOffset;
+
+
+
+    yaw   += xOffset * 1.5f;
+    pitch += yOffset * 1.5f;
 
     if(pitch > 89.0f)
         pitch = 89.0f;

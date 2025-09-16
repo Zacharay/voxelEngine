@@ -7,7 +7,6 @@
 class ChunkColumn {
     unsigned int m_VAO,m_VBO;
 
-
     int m_posX;
     int m_posZ;
 
@@ -20,9 +19,9 @@ class ChunkColumn {
     std::vector<Chunk> m_chunks;
     std::vector<Face> m_mesh;
 
-    public:
+public:
     bool isMeshDirty = true;
-
+    unsigned int m_meshSize;
     ChunkColumn(FastNoiseLite& m_noise,int x,int z);
     ~ChunkColumn();
 

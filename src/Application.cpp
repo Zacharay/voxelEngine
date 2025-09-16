@@ -1,7 +1,7 @@
 #include  "Application.hpp"
 
 #include <iostream>
-
+#include <Timer.hpp>
 #include "Camera.hpp"
 
 
@@ -66,6 +66,7 @@ void Application::processInput(float deltaTime) {
 
 
 void Application::onRender() {
+
     const ChunkMap &chunks = world->getChunks();
 
     meshRenderer->setViewMatrix(camera->getViewMatrix());
@@ -79,16 +80,16 @@ void Application::onUpdate() {
 
     processInput(deltaTime);
 
-    glm::vec3 playerPos = camera->getPosition();
+     glm::vec3 playerPos = camera->getPosition();
 
      int playerChunkX = playerPos.x / Config::chunkSize;
      int playerChunkZ = playerPos.z / Config::chunkSize;
 
-     for(int x = playerChunkX - Config::chunkRadius; x < playerChunkX + Config::chunkRadius; x++) {
-         for( int z = playerChunkZ - Config::chunkRadius; z < playerChunkZ + Config::chunkRadius; z++) {
-             world->loadChunk(x,z);
-         }
-     }
+    for(int x = playerChunkX - Config::chunkRadius; x < playerChunkX + Config::chunkRadius; x++) {
+        for( int z = playerChunkZ - Config::chunkRadius; z < playerChunkZ + Config::chunkRadius; z++) {
+            world->loadChunk(x,z);
+        }
+    }
 
     world->unloadFarChunks(playerChunkX,playerChunkZ);
 

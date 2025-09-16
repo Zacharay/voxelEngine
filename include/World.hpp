@@ -22,16 +22,16 @@ namespace std {
 using ChunkMap = std::unordered_map<glm::ivec2, ChunkColumn>;
 
 class World {
-private:
-    FastNoiseLite m_noise;
-    ChunkMap m_chunks;
-    void setNeighbours();
 public:
-
     World();
-    ~World();
     void loadChunk(int chunkPosX,int chunkPosZ);
     void regenerateMeshes();
     void unloadFarChunks(int playerChunkX,int playerChunkZ);
     const ChunkMap& getChunks() const;
+private:
+    FastNoiseLite m_noise;
+    ChunkMap m_chunks;
+    void setNeighbours();
+    ChunkColumn* getChunkColumn(int chunkPosX,int chunkPosZ);
+
 };

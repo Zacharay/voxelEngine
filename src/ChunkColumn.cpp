@@ -5,6 +5,7 @@
 #include "Config.hpp"
 #include "glad/glad.h"
 #include <iostream>
+#include "WorldGenerator.hpp"
 
 
 ChunkColumn::ChunkColumn(FastNoiseLite& m_noise,int x,int z) {
@@ -16,8 +17,8 @@ ChunkColumn::ChunkColumn(FastNoiseLite& m_noise,int x,int z) {
         m_chunks.emplace_back(m_posX,i,m_posZ);
     }
 
-    int offsetX = m_posX * Config::chunkSize ;//+ Config::noiseWidth / 2;
-    int offsetZ = m_posZ * Config::chunkSize; //+ Config::noiseWidth / 2;
+    int offsetX = m_posX * Config::chunkSize;
+    int offsetZ = m_posZ * Config::chunkSize;
     for(int x=0;x<Config::chunkSize;x++)
         for(int z=0;z<Config::chunkSize;z++) {
 
@@ -30,33 +31,14 @@ ChunkColumn::ChunkColumn(FastNoiseLite& m_noise,int x,int z) {
 
                 const int chunkYPos = y/Config::chunkSize;
 
-                BlockType block;
-                if(y<60) {
-                    block = BlockType::Stone;
-                }
-                else if(y > 60 && y < 75) {
-                    block= BlockType::Sand;
-                }
-                else {
-
-                    if((x+z)%2 == 0) {
-                        block = BlockType::Grass;
-                    }
-                    else {
-                        block = BlockType::Dirt;
-                    }
-
-
-                }
-
-                m_chunks[chunkYPos].setBlock(block,x,y - chunkYPos*Config::chunkSize,z);
+                m_chunks[chunkYPos].setBlock(WorldGenerator::generateBlock(y),x,y - chunkYPos*Config::chunkSize,z);
 
             }
 
 
         }
 
-
+    m_mesh.reserve(Config::chunkSize * Config::chunkSize * 6);
 }
 ChunkColumn::~ChunkColumn() {
     destroyGL();           // free VAO/VBO
@@ -78,6 +60,8 @@ void ChunkColumn::destroyGL() {
 void ChunkColumn::generateMesh() {
     m_mesh.clear();
     m_mesh.shrink_to_fit();
+    m_mesh.reserve(Config::chunkSize * Config::chunkSize * 6);
+
     if (m_VBO) {
         glDeleteBuffers(1, &m_VBO);
         m_VBO = 0;
@@ -125,6 +109,9 @@ void ChunkColumn::generateMesh() {
     glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(3 * sizeof(float)));
 
     isMeshDirty = false;
+    m_meshSize = m_mesh.size();
+    m_mesh.clear();
+    m_mesh.shrink_to_fit();
 }
 void ChunkColumn::setNeighbouringChunks(ChunkColumn* chunkNx,ChunkColumn* chunkPx,ChunkColumn* chunkNz,ChunkColumn* chunkPz) {
     m_nbrChunkColumnNX = chunkNx;;
@@ -163,5 +150,4 @@ const std::vector<Face>& ChunkColumn::getMesh()const {
 }
 Chunk * ChunkColumn::getChunk(int height) {
     return &m_chunks[height];
-
 }

@@ -6,43 +6,8 @@
 
 
 World::World() {
-
-
     m_noise.SetNoiseType(FastNoiseLite::NoiseType_Perlin);
-    m_noise.SetFrequency(0.0015f);
-
-
-    // for(int chunkPosX = -Config::chunkRadius; chunkPosX < Config::chunkRadius; chunkPosX++) {
-    //     for(int chunkPosZ = -Config::chunkRadius; chunkPosZ < Config::chunkRadius; chunkPosZ++) {
-    //
-    //     }
-    // }
-    //
-    //
-    // setNeighbours();
-    //
-    // for(auto &pair:m_chunks) {
-    //     ChunkColumn &chunk = pair.second;
-    //     chunk.generateMesh();
-    // }
-
-
-
-}
-
-
-World::~World() {
-
-}
-
-void World::setNeighbours() {
-    for(auto& pair : m_chunks) {
-        glm::ivec2 pos = pair.first;
-        ChunkColumn& chunkColumn = pair.second;
-
-
-
-    }
+    m_noise.SetFrequency(0.004f);
 }
 void World::loadChunk(int chunkPosX,int chunkPosZ) {
 
@@ -53,43 +18,15 @@ void World::loadChunk(int chunkPosX,int chunkPosZ) {
     }
     ChunkColumn chunk(m_noise,chunkPosX,chunkPosZ);
 
-    ChunkColumn* chunkNx= nullptr;
-    ChunkColumn* chunkPx= nullptr;
-    ChunkColumn* chunkNz= nullptr;
-    ChunkColumn* chunkPz= nullptr;
-
-
-
-    auto itNx = m_chunks.find(glm::ivec2(chunkPosX - 1,  chunkPosZ));
-    if (itNx != m_chunks.end()) {
-        chunkNx = &(itNx->second);
-    }
-
-
-    auto itPx = m_chunks.find(glm::ivec2(chunkPosX + 1,  chunkPosZ));
-    if (itPx != m_chunks.end()) {
-        chunkPx = &(itPx->second);
-    }
-
-
-
-    auto itNz = m_chunks.find(glm::ivec2(chunkPosX,  chunkPosZ - 1));
-    if (itNz != m_chunks.end()) {
-        chunkNz = &(itNz->second);
-
-    }
-
-
-    auto itPz = m_chunks.find(glm::ivec2(chunkPosX,chunkPosZ + 1));
-    if (itPz != m_chunks.end()) {
-        chunkPz = &(itPz->second);
-    }
+    ChunkColumn* chunkNx= getChunkColumn(chunkPosX - 1 ,chunkPosZ);
+    ChunkColumn* chunkPx= getChunkColumn(chunkPosX + 1 ,chunkPosZ);
+    ChunkColumn* chunkNz= getChunkColumn(chunkPosX     ,chunkPosZ - 1);
+    ChunkColumn* chunkPz= getChunkColumn(chunkPosX     ,chunkPosZ + 1);
 
     auto [it, inserted] = m_chunks.emplace(chunkPos, std::move(chunk));
     ChunkColumn* chunkPtr = &it->second;
 
     chunkPtr->setNeighbouringChunks(chunkNx, chunkPx, chunkNz, chunkPz);
-
 
 
     if(chunkNx) {
@@ -111,6 +48,7 @@ void World::loadChunk(int chunkPosX,int chunkPosZ) {
 
 
 }
+
 void World::unloadFarChunks(int playerChunkX,int playerChunkZ) {
     const int unloadRadius = static_cast<int>(Config::chunkRadius) + 1;
     std::vector<glm::ivec2> toRemove;
@@ -146,4 +84,21 @@ void World::regenerateMeshes() {
 const ChunkMap &World::getChunks()const {
     return m_chunks;
 }
+ChunkColumn* World::getChunkColumn(int chunkPosX,int chunkPosZ) {
+    auto chunkIt = m_chunks.find(glm::ivec2(chunkPosX,chunkPosZ));
+    if (chunkIt != m_chunks.end()) {
+        return &(chunkIt->second);
+    }
 
+    return nullptr;
+}
+
+void World::setNeighbours() {
+    for(auto& pair : m_chunks) {
+        glm::ivec2 pos = pair.first;
+        ChunkColumn& chunkColumn = pair.second;
+
+
+
+    }
+}

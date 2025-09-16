@@ -28,7 +28,8 @@ Window::Window() : m_window(nullptr) {
     }
 
     glViewport(0, 0, Config::windowWidth, Config::windowHeight);
-    //glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+    if(Config::wireframeMode) glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);;
+
 }
 
 // Destructor

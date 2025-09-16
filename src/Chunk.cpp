@@ -1,6 +1,7 @@
 #include "Chunk.hpp"
 #include <iostream>
 #include <array>
+#include "WorldGenerator.hpp"
 
 
 enum FaceDirection {
@@ -49,7 +50,6 @@ Chunk::Chunk(const int x,const int y,const int z):blocks{},
 
 
 void Chunk::setBlock(BlockType block,int x,int y,int z) {
-
     blocks[z][y][x] = block;
 }
 inline glm::vec3 Chunk::convertToWorldCoordinates(const glm::vec3 &coordinates) {
@@ -63,6 +63,14 @@ inline glm::vec3 Chunk::convertToWorldCoordinates(const glm::vec3 &coordinates) 
 
 }
 void Chunk::generateMesh(std::vector<Face>& mesh, Chunk* chunkNx, Chunk* chunkPx, Chunk* chunkNy, Chunk* chunkPy, Chunk* chunkNz, Chunk* chunkPz) {
+    static const float shade[6] = {
+        0.8f, // Front
+        0.8f, // Back
+        0.6f, // Left
+        0.6f, // Right
+        1.0f, // Top
+        0.4f  // Bottom
+    };
     for (int z= 0; z < Config::chunkSize; z++) {
         for (int y = 0; y < Config::chunkSize; y++) {
             for (int x = 0; x < Config::chunkSize; x++) {
@@ -158,7 +166,7 @@ void Chunk::generateMesh(std::vector<Face>& mesh, Chunk* chunkNx, Chunk* chunkPx
                         for (int j = 0; j < 6; j++) {
                             glm::vec3 vertexPos = convertToWorldCoordinates(faceVertices[i][j]+ glm::vec3(x,y,z));
                             face.vertices[j].position = vertexPos;
-                            face.vertices[j].color = color;
+                            face.vertices[j].color = color * shade[i];
                         }
                         mesh.push_back(face);
                     }

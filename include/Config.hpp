@@ -14,6 +14,6 @@ namespace Config {
 
     constexpr int chunkMaxBlockHeight = chunkSize * chunkColumnHeight;
 
-
+    inline bool showFaceCount = false;
     inline bool wireframeMode = false;
 }

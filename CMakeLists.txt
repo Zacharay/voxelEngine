@@ -28,7 +28,9 @@ add_executable(voxelEngine ${SOURCES}
         include/Camera.hpp
         include/Config.hpp
         include/ChunkColumn.hpp
-        src/ChunkColumn.cpp)
+        src/ChunkColumn.cpp
+        include/Timer.hpp
+        include/WorldGenerator.hpp)
 
 # Include directories
 include_directories(${OPENGL_INCLUDE_DIRS})
