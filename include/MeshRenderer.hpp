@@ -9,6 +9,9 @@
 
 
 class MeshRenderer {
+
+    unsigned int m_textureAtlas;
+
     std::unique_ptr<Shader> shader;
     glm::mat4 m_viewMatrix;
     glm::mat4 m_projectionMatrix;

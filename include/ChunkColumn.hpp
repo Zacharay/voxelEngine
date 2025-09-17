@@ -19,13 +19,20 @@ class ChunkColumn {
     std::vector<Chunk> m_chunks;
     std::vector<Face> m_mesh;
 
+
+
 public:
     bool isMeshDirty = true;
+
+    bool cpuMeshReady = false;
+    bool gpuMeshReady = false;
+
     unsigned int m_meshSize;
     ChunkColumn(FastNoiseLite& m_noise,int x,int z);
     ~ChunkColumn();
 
     void generateMesh();
+    void uploadToGpu();
     void bindMesh()const;
     void setNeighbouringChunks(ChunkColumn* chunkNx,ChunkColumn* chunkPx,ChunkColumn* chunkNz,ChunkColumn* chunkPz);
     const std::vector<Face>& getMesh()const;

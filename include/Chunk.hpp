@@ -3,16 +3,25 @@
 #include <array>
 #include "Config.hpp"
 #include "glm/vec3.hpp"
+#include "glm/vec2.hpp"
 #include "WorldGenerator.hpp"
 
 struct Vertex {
     glm::vec3 position;
-    glm::vec3 color;
+    glm::vec2 textureCoordinates;
 };
 struct Face {
     Vertex vertices[6];
 };
 
+enum FaceDirection {
+    Front,
+    Back,
+    Left,
+    Right,
+    Top,
+    Bottom
+};
 
 
 

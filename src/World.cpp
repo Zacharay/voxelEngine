@@ -78,6 +78,7 @@ void World::regenerateMeshes() {
         ChunkColumn& chunkColumn = pair.second;
         if(chunkColumn.isMeshDirty) {
             chunkColumn.generateMesh();
+            chunkColumn.uploadToGpu();
         }
     }
 }

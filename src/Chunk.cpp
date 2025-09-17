@@ -1,17 +1,11 @@
 #include "Chunk.hpp"
 #include <iostream>
 #include <array>
+
+#include "TextureManager.hpp"
 #include "WorldGenerator.hpp"
 
 
-enum FaceDirection {
-    Front,
-    Back,
-    Left,
-    Right,
-    Top,
-    Bottom
-};
 
 
 constexpr std::array<std::array<glm::vec3, 6>, 6> faceVertices = {{
@@ -158,16 +152,14 @@ void Chunk::generateMesh(std::vector<Face>& mesh, Chunk* chunkNx, Chunk* chunkPx
                     }
                 }
 
-                // Create faces for the visible sides
-                glm::vec3 color = blockColors[blocks[z][y][x]];
                 for (int i = 0; i < 6; i++) {
                     if (shouldRenderFace[i]) {
                         Face face;
                         for (int j = 0; j < 6; j++) {
                             glm::vec3 vertexPos = convertToWorldCoordinates(faceVertices[i][j]+ glm::vec3(x,y,z));
                             face.vertices[j].position = vertexPos;
-                            face.vertices[j].color = color * shade[i];
                         }
+                        TextureManager::getTextureCoordinates(face.vertices,(BlockType)blocks[z][y][x],(FaceDirection)i);
                         mesh.push_back(face);
                     }
                 }

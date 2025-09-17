@@ -94,6 +94,11 @@ void ChunkColumn::generateMesh() {
             );
 
     }
+
+    isMeshDirty = false;
+    cpuMeshReady = true;
+}
+void ChunkColumn::uploadToGpu() {
     glGenVertexArrays(1, &m_VAO);
     glGenBuffers(1, &m_VBO);
     glBindVertexArray(m_VAO);
@@ -106,13 +111,15 @@ void ChunkColumn::generateMesh() {
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
 
     glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(3 * sizeof(float)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, textureCoordinates));
 
-    isMeshDirty = false;
+
     m_meshSize = m_mesh.size();
     m_mesh.clear();
     m_mesh.shrink_to_fit();
+    gpuMeshReady = true;
 }
+
 void ChunkColumn::setNeighbouringChunks(ChunkColumn* chunkNx,ChunkColumn* chunkPx,ChunkColumn* chunkNz,ChunkColumn* chunkPz) {
     m_nbrChunkColumnNX = chunkNx;;
     m_nbrChunkColumnPX = chunkPx;

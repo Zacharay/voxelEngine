@@ -30,7 +30,8 @@ add_executable(voxelEngine ${SOURCES}
         include/ChunkColumn.hpp
         src/ChunkColumn.cpp
         include/Timer.hpp
-        include/WorldGenerator.hpp)
+        include/WorldGenerator.hpp
+        include/TextureManager.hpp)
 
 # Include directories
 include_directories(${OPENGL_INCLUDE_DIRS})
