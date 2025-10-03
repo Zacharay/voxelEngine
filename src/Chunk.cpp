@@ -91,8 +91,32 @@ u_int8_t Chunk::computeCornerAo(FaceDirection faceDir,int corner,int x,int y,int
                     d3x = 1, d3y = 1, d3z = -1;
                 break;
             }
-
             break;
+
+        case FaceDirection::Front:
+        switch (corner) {
+            case 0:
+                d1x = 1, d1y = 0, d1z = 1;
+                d2x = 0, d2y = -1, d2z = 1;
+                d3x = 1, d3y = -1, d3z = 1;
+            break;
+            case 1:
+                d1x = -1, d1y = 0, d1z = 1;
+                d2x = 0, d2y = -1, d2z =  1;
+                d3x = -1, d3y = -1, d3z = 1;
+            break;
+            case 2:
+                d1x = -1, d1y = 0, d1z = 1;
+                d2x = 0, d2y = 1, d2z = 1;
+                d3x = -1, d3y = 1, d3z = 1;
+            break;
+            case 3:
+                d1x = 1, d1y = 0, d1z = 1;
+                d2x = 0, d2y = 1, d2z = 1;
+                d3x = 1, d3y = 1, d3z = 1;
+            break;
+        }
+        break;
         default:
             break;
     }
