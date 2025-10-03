@@ -37,6 +37,12 @@ ChunkColumn::ChunkColumn(FastNoiseLite& m_noise,int x,int z) {
 
 
         }
+    //int y=120;
+    //int chunkYPos = y/Config::chunkSize;
+    // m_chunks[chunkYPos].setBlock(WorldGenerator::generateBlock(y),5,y - chunkYPos*Config::chunkSize+1,5);
+    // m_chunks[chunkYPos].setBlock(WorldGenerator::generateBlock(y),6,y - chunkYPos*Config::chunkSize+1,5);
+    // m_chunks[chunkYPos].setBlock(WorldGenerator::generateBlock(y),5,y - chunkYPos*Config::chunkSize+1,6);
+    // m_chunks[chunkYPos].setBlock(WorldGenerator::generateBlock(y),6,y - chunkYPos*Config::chunkSize+1,6);
 
     m_mesh.reserve(Config::chunkSize * Config::chunkSize * 6);
 }
@@ -112,7 +118,8 @@ void ChunkColumn::uploadToGpu() {
 
     glEnableVertexAttribArray(1);
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, textureCoordinates));
-
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 1, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Vertex), (void*)offsetof(Vertex, ao));
 
     m_meshSize = m_mesh.size();
     m_mesh.clear();

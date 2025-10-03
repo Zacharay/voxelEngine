@@ -1,13 +1,14 @@
 #include "Chunk.hpp"
 #include <iostream>
 #include <array>
+#include <random>
 
 #include "TextureManager.hpp"
 #include "WorldGenerator.hpp"
 
 
 
-
+//bottom right //bottom left //top left
 constexpr std::array<std::array<glm::vec3, 6>, 6> faceVertices = {{
     // Front face (Z+)
     { glm::vec3(0.5f, -0.5f, 0.5f), glm::vec3(-0.5f, -0.5f, 0.5f), glm::vec3(-0.5f, 0.5f, 0.5f),
@@ -22,8 +23,8 @@ constexpr std::array<std::array<glm::vec3, 6>, 6> faceVertices = {{
     { glm::vec3(0.5f, -0.5f, 0.5f), glm::vec3(0.5f, -0.5f, -0.5f), glm::vec3(0.5f, 0.5f, -0.5f),
       glm::vec3(0.5f, 0.5f, -0.5f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(0.5f, -0.5f, 0.5f) },
     // Top face (Y+)
-    { glm::vec3(-0.5f, 0.5f, 0.5f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(0.5f, 0.5f, -0.5f),
-      glm::vec3(0.5f, 0.5f, -0.5f), glm::vec3(-0.5f, 0.5f, -0.5f), glm::vec3(-0.5f, 0.5f, 0.5f) },
+    { glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(-0.5f, 0.5f, 0.5f), glm::vec3(-0.5f, 0.5f, -0.5f),
+      glm::vec3(-0.5f, 0.5f, -0.5f), glm::vec3(0.5f, 0.5f, -0.5f), glm::vec3(0.5f, 0.5f, 0.5f) },
     // Bottom face (Y-)
     { glm::vec3(-0.5f, -0.5f, 0.5f), glm::vec3(0.5f, -0.5f, 0.5f), glm::vec3(0.5f, -0.5f, -0.5f),
       glm::vec3(0.5f, -0.5f, -0.5f), glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(-0.5f, -0.5f, 0.5f) }
@@ -42,6 +43,67 @@ Chunk::Chunk(const int x,const int y,const int z):blocks{},
                 }
 }
 
+inline uint8_t Chunk::calcAO(bool side1, bool side2, bool corner)
+{
+    if (side1 && side2)
+        return 60;   // darkest (strong corner shadow)
+
+    int occ = int(side1) + int(side2) + int(corner);
+    switch (occ) {
+        case 0: return 255; // no occlusion
+        case 1: return 170; // slight shadow
+        case 2: return 110; // deeper shadow
+        case 3: return 60;  // almost blocked
+    }
+    return 255;
+}
+u_int8_t Chunk::computeCornerAo(FaceDirection faceDir,int corner,int x,int y,int z) {
+    int d1x=0,d1y=0,d1z=0;
+    int d2x=0,d2y=0,d2z=0;
+    int d3x=0,d3y=0,d3z=0;
+
+
+    //bottom-right 0
+    //bottom-left 1
+    //top-left 2
+    //top-right 3
+    switch (faceDir) {
+        case FaceDirection::Top:
+            switch (corner) {
+                case 0:
+                    d1x = 1, d1y = 1, d1z = 0;
+                    d2x = 0, d2y = 1, d2z = 1;
+                    d3x = 1, d3y = 1, d3z = 1;
+                break;
+                case 1:
+                    d1x = -1, d1y = 1, d1z = 0;
+                    d2x = 0, d2y = 1, d2z = 1;
+                    d3x = -1, d3y = 1, d3z = 1;
+                break;
+                case 2:
+                    d1x = -1, d1y = 1, d1z = 0;
+                    d2x = 0, d2y = 1, d2z = -1;
+                    d3x = -1, d3y = 1, d3z = -1;
+                break;
+                case 3:
+                    d1x = 1, d1y = 1, d1z = 0;
+                    d2x = 0, d2y = 1, d2z = -1;
+                    d3x = 1, d3y = 1, d3z = -1;
+                break;
+            }
+
+            break;
+        default:
+            break;
+    }
+
+    bool side1 = isBlockSolid(x+d1x,y+d1y,z+d1z);
+    bool side2 = isBlockSolid(x+d2x,y+d2y,z+d2z);
+    bool side3 = isBlockSolid(x+d3x,y+d3y,z+d3z);
+
+    return calcAO(side1,side2,side3);
+
+}
 
 void Chunk::setBlock(BlockType block,int x,int y,int z) {
     blocks[z][y][x] = block;
@@ -57,13 +119,13 @@ inline glm::vec3 Chunk::convertToWorldCoordinates(const glm::vec3 &coordinates) 
 
 }
 void Chunk::generateMesh(std::vector<Face>& mesh, Chunk* chunkNx, Chunk* chunkPx, Chunk* chunkNy, Chunk* chunkPy, Chunk* chunkNz, Chunk* chunkPz) {
-    static const float shade[6] = {
-        0.8f, // Front
-        0.8f, // Back
-        0.6f, // Left
-        0.6f, // Right
-        1.0f, // Top
-        0.4f  // Bottom
+    constexpr uint8_t faceShade[6] = {
+        200, // Front
+        130, // Back
+        180, // Left
+        150, // Right
+        255, // Top
+        100  // Bottom
     };
     for (int z= 0; z < Config::chunkSize; z++) {
         for (int y = 0; y < Config::chunkSize; y++) {
@@ -152,12 +214,20 @@ void Chunk::generateMesh(std::vector<Face>& mesh, Chunk* chunkNx, Chunk* chunkPx
                     }
                 }
 
+                //bottom-right 0
+                //bottom-left 1
+                //top-left 2
+                //top-right 3
+                constexpr int triangleOrder[] = {0,1,2, 2,3,0};
                 for (int i = 0; i < 6; i++) {
                     if (shouldRenderFace[i]) {
                         Face face;
                         for (int j = 0; j < 6; j++) {
+                            int cornerID = triangleOrder[j];
                             glm::vec3 vertexPos = convertToWorldCoordinates(faceVertices[i][j]+ glm::vec3(x,y,z));
                             face.vertices[j].position = vertexPos;
+                            face.vertices[j].ao = computeCornerAo((FaceDirection)i,cornerID,x,y,z);
+
                         }
                         TextureManager::getTextureCoordinates(face.vertices,(BlockType)blocks[z][y][x],(FaceDirection)i);
                         mesh.push_back(face);

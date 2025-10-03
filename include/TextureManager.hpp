@@ -42,7 +42,7 @@ namespace TextureManager {
         float horizontalMin = tx * tileW;
         float horizontalMax = horizontalMin + tileW;
 
-        //top-left
+        //top left
         vertices[0].textureCoordinates = glm::vec2(horizontalMin, verticalMax);
         //top-right
         vertices[1].textureCoordinates = glm::vec2(horizontalMax, verticalMax);
