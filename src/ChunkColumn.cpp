@@ -8,13 +8,13 @@
 #include "WorldGenerator.hpp"
 
 
-ChunkColumn::ChunkColumn(FastNoiseLite& m_noise,int x,int z) {
+ChunkColumn::ChunkColumn(FastNoiseLite& m_noise,int x,int z,World *world) {
 
     m_posX = x;
     m_posZ = z;
     m_chunks.reserve(Config::chunkColumnHeight);
     for(int i=0;i < Config::chunkColumnHeight ;i++) {
-        m_chunks.emplace_back(m_posX,i,m_posZ);
+        m_chunks.emplace_back(m_posX,i,m_posZ,world);
     }
 
     int offsetX = m_posX * Config::chunkSize;
@@ -37,12 +37,6 @@ ChunkColumn::ChunkColumn(FastNoiseLite& m_noise,int x,int z) {
 
 
         }
-    //int y=120;
-    //int chunkYPos = y/Config::chunkSize;
-    // m_chunks[chunkYPos].setBlock(WorldGenerator::generateBlock(y),5,y - chunkYPos*Config::chunkSize+1,5);
-    // m_chunks[chunkYPos].setBlock(WorldGenerator::generateBlock(y),6,y - chunkYPos*Config::chunkSize+1,5);
-    // m_chunks[chunkYPos].setBlock(WorldGenerator::generateBlock(y),5,y - chunkYPos*Config::chunkSize+1,6);
-    // m_chunks[chunkYPos].setBlock(WorldGenerator::generateBlock(y),6,y - chunkYPos*Config::chunkSize+1,6);
 
     m_mesh.reserve(Config::chunkSize * Config::chunkSize * 6);
 }
@@ -63,6 +57,12 @@ void ChunkColumn::destroyGL() {
         m_VAO = 0;
     }
 }
+BlockType ChunkColumn::getBlockAt(int chunkPosY, int x, int y, int z) {
+    if (chunkPosY < 0 || chunkPosY >= m_chunks.size()) return BlockType::Air;
+    return m_chunks[chunkPosY].getBlock(x, y, z);
+
+}
+
 void ChunkColumn::generateMesh() {
     m_mesh.clear();
     m_mesh.shrink_to_fit();

@@ -4,6 +4,8 @@
 #include <vector>
 
 
+class World;
+
 class ChunkColumn {
     unsigned int m_VAO,m_VBO;
 
@@ -28,7 +30,7 @@ public:
     bool gpuMeshReady = false;
 
     unsigned int m_meshSize;
-    ChunkColumn(FastNoiseLite& m_noise,int x,int z);
+    ChunkColumn(FastNoiseLite& m_noise,int x,int z,World *world);
     ~ChunkColumn();
 
     void generateMesh();
@@ -37,6 +39,7 @@ public:
     void setNeighbouringChunks(ChunkColumn* chunkNx,ChunkColumn* chunkPx,ChunkColumn* chunkNz,ChunkColumn* chunkPz);
     const std::vector<Face>& getMesh()const;
     Chunk *getChunk(int height);
+    BlockType getBlockAt(int chunkPosY,int x,int y,int z);
 
     void setNeighbourNx(ChunkColumn* chunkNX){m_nbrChunkColumnNX = chunkNX;}
     void setNeighbourNz(ChunkColumn* chunkNZ){m_nbrChunkColumnNZ = chunkNZ;};

@@ -16,7 +16,7 @@ void World::loadChunk(int chunkPosX,int chunkPosZ) {
     if(m_chunks.find(glm::ivec2(chunkPosX, chunkPosZ)) != m_chunks.end()) {
         return;
     }
-    ChunkColumn chunk(m_noise,chunkPosX,chunkPosZ);
+    ChunkColumn chunk(m_noise,chunkPosX,chunkPosZ,this);
 
     ChunkColumn* chunkNx= getChunkColumn(chunkPosX - 1 ,chunkPosZ);
     ChunkColumn* chunkPx= getChunkColumn(chunkPosX + 1 ,chunkPosZ);
@@ -46,6 +46,27 @@ void World::loadChunk(int chunkPosX,int chunkPosZ) {
         chunkPz->isMeshDirty = true;
     }
 
+
+}
+BlockType World::getBlockAt(glm::ivec3 pos) {
+    int chunkX = pos.x / Config::chunkSize;
+    int chunkY = pos.y / Config::chunkSize;
+    int chunkZ = pos.z / Config::chunkSize;
+
+
+
+    ChunkColumn* column = getChunkColumn(chunkX, chunkZ);
+    if (!column) {
+        // Return Air if chunk isn't loaded yet
+        return BlockType::Air;
+    }
+
+    return column->getBlockAt(
+        chunkY,
+        pos.x % Config::chunkSize,
+        pos.y % Config::chunkSize,
+        pos.z % Config::chunkSize
+    );
 
 }
 

@@ -1,10 +1,10 @@
 #include "Chunk.hpp"
-#include <iostream>
 #include <array>
 #include <random>
 
 #include "TextureManager.hpp"
 #include "WorldGenerator.hpp"
+#include "World.hpp"
 
 
 
@@ -30,7 +30,7 @@ constexpr std::array<std::array<glm::vec3, 6>, 6> faceVertices = {{
       glm::vec3(0.5f, -0.5f, -0.5f), glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(-0.5f, -0.5f, 0.5f) }
 }};
 
-Chunk::Chunk(const int x,const int y,const int z):blocks{},
+Chunk::Chunk(const int x,const int y,const int z,World *world):m_world(world),blocks{},
     m_chunkPositionX(x),
     m_chunkPositionY(y),
     m_chunkPositionZ(z)
@@ -42,6 +42,20 @@ Chunk::Chunk(const int x,const int y,const int z):blocks{},
                     blocks[i][j][k] = BlockType::Air;
                 }
 }
+bool Chunk::isBlockSolid(int x, int y, int z) {
+    if( x<0 || x >= Config::chunkSize||
+        y<0 || y >= Config::chunkSize||
+        z<0 || z >= Config::chunkSize  ) {
+
+            glm::vec3 globalPos = convertToWorldCoordinates(glm::vec3(x,y,z));
+            BlockType block = m_world->getBlockAt(globalPos);
+
+            return block != BlockType::Air;
+        }
+
+    return blocks[z][y][x] != BlockType::Air;
+}
+
 
 inline uint8_t Chunk::calcAO(bool side1, bool side2, bool corner)
 {
@@ -94,36 +108,108 @@ u_int8_t Chunk::computeCornerAo(FaceDirection faceDir,int corner,int x,int y,int
             break;
 
         case FaceDirection::Front:
-        switch (corner) {
-            case 0:
-                d1x = 1, d1y = 0, d1z = 1;
-                d2x = 0, d2y = -1, d2z = 1;
-                d3x = 1, d3y = -1, d3z = 1;
-            break;
-            case 1:
-                d1x = -1, d1y = 0, d1z = 1;
-                d2x = 0, d2y = -1, d2z =  1;
-                d3x = -1, d3y = -1, d3z = 1;
-            break;
-            case 2:
-                d1x = -1, d1y = 0, d1z = 1;
-                d2x = 0, d2y = 1, d2z = 1;
-                d3x = -1, d3y = 1, d3z = 1;
-            break;
-            case 3:
-                d1x = 1, d1y = 0, d1z = 1;
-                d2x = 0, d2y = 1, d2z = 1;
-                d3x = 1, d3y = 1, d3z = 1;
-            break;
-        }
+            switch (corner) {
+                case 0:
+                    d1x = 1, d1y = 0, d1z = -1;
+                    d2x = 0, d2y = -1, d2z = -1;
+                    d3x = 1, d3y = -1, d3z = -1;
+                break;
+                case 1:
+                    d1x = -1, d1y = 0, d1z = 1;
+                    d2x = 0, d2y = -1, d2z =  1;
+                    d3x = -1, d3y = -1, d3z = 1;
+                break;
+                case 2:
+                    d1x = -1, d1y = 0, d1z = 1;
+                    d2x = 0, d2y = 1, d2z = 1;
+                    d3x = -1, d3y = 1, d3z = 1;
+                break;
+                case 3:
+                    d1x = 1, d1y = 0, d1z = 1;
+                    d2x = 0, d2y = 1, d2z = 1;
+                    d3x = 1, d3y = 1, d3z = 1;
+                break;
+            }
+        break;
+        case FaceDirection::Back:
+            switch (corner) {
+                case 0:
+                    d1x = 1, d1y = 0, d1z = -1;
+                    d2x = 0, d2y = -1, d2z = -1;
+                    d3x = 1, d3y = -1, d3z = -1;
+                break;
+                case 1:
+                    d1x = -1, d1y = 0, d1z =  -1;
+                    d2x = 0, d2y = -1, d2z =  -1;
+                    d3x = -1, d3y = -1, d3z = -1;
+                break;
+                case 2:
+                    d1x = -1, d1y = 0, d1z = -1;
+                    d2x = 0, d2y = 1, d2z = -1;
+                    d3x = -1, d3y = 1, d3z = -1;
+                break;
+                case 3:
+                    d1x = 1, d1y = 0, d1z = -1;
+                    d2x = 0, d2y = 1, d2z = -1;
+                    d3x = 1, d3y = 1, d3z = -1;
+                break;
+            }
+        break;
+        case FaceDirection::Right:
+            switch (corner) {
+                case 0:
+                    d1x = 1, d1y = 0, d1z = 1;
+                    d2x = 1, d2y = -1, d2z = 0;
+                    d3x = 1, d3y = -1, d3z = 1;
+                break;
+                case 1:
+                    d1x = 1, d1y = 0, d1z =  -1;
+                    d2x = 1, d2y = -1, d2z =  0;
+                    d3x = 1, d3y = -1, d3z = -1;
+                break;
+                case 2:
+                    d1x = 1, d1y = 0, d1z = -1;
+                    d2x = 1, d2y = 1, d2z = 0;
+                    d3x = 1, d3y = 1, d3z = 1;
+                break;
+                case 3:
+                    d1x = 1, d1y = 0, d1z = 1;
+                    d2x = 1, d2y = 1, d2z = 0;
+                    d3x = 1, d3y = 1, d3z = 1;
+                break;
+            }
+        break;
+        case FaceDirection::Left:
+            switch (corner) {
+                case 0:
+                    d1x = -1, d1y = 0, d1z = 1;
+                    d2x = -1, d2y = -1, d2z = 0;
+                    d3x = -1, d3y = -1, d3z = 1;
+                break;
+                case 1:
+                    d1x = -1, d1y = 0, d1z =  -1;
+                    d2x = -1, d2y = -1, d2z =  0;
+                    d3x = -1, d3y = -1, d3z = -1;
+                break;
+                case 2:
+                    d1x = -1, d1y = 0, d1z = -1;
+                    d2x = -1, d2y = 1, d2z = 0;
+                    d3x = -1, d3y = 1, d3z = 1;
+                break;
+                case 3:
+                    d1x = -1, d1y = 0, d1z = 1;
+                    d2x = -1, d2y = 1, d2z = 0;
+                    d3x = -1, d3y = 1, d3z = 1;
+                break;
+            }
         break;
         default:
             break;
     }
 
-    bool side1 = isBlockSolid(x+d1x,y+d1y,z+d1z);
-    bool side2 = isBlockSolid(x+d2x,y+d2y,z+d2z);
-    bool side3 = isBlockSolid(x+d3x,y+d3y,z+d3z);
+    bool side1 = isBlockSolid(x + d1x, y + d1y, z + d1z);
+    bool side2 = isBlockSolid(x + d2x, y + d2y, z + d2z);
+    bool side3 = isBlockSolid(x + d3x, y + d3y, z + d3z);
 
     return calcAO(side1,side2,side3);
 
@@ -132,6 +218,10 @@ u_int8_t Chunk::computeCornerAo(FaceDirection faceDir,int corner,int x,int y,int
 void Chunk::setBlock(BlockType block,int x,int y,int z) {
     blocks[z][y][x] = block;
 }
+BlockType Chunk::getBlock(int x, int y, int z) {
+    return (BlockType)blocks[z][y][x];
+}
+
 inline glm::vec3 Chunk::convertToWorldCoordinates(const glm::vec3 &coordinates) {
     const glm::vec3 offsetVec = glm::vec3(
                    static_cast<float>(m_chunkPositionX) * Config::chunkSize ,
@@ -143,14 +233,6 @@ inline glm::vec3 Chunk::convertToWorldCoordinates(const glm::vec3 &coordinates) 
 
 }
 void Chunk::generateMesh(std::vector<Face>& mesh, Chunk* chunkNx, Chunk* chunkPx, Chunk* chunkNy, Chunk* chunkPy, Chunk* chunkNz, Chunk* chunkPz) {
-    constexpr uint8_t faceShade[6] = {
-        200, // Front
-        130, // Back
-        180, // Left
-        150, // Right
-        255, // Top
-        100  // Bottom
-    };
     for (int z= 0; z < Config::chunkSize; z++) {
         for (int y = 0; y < Config::chunkSize; y++) {
             for (int x = 0; x < Config::chunkSize; x++) {

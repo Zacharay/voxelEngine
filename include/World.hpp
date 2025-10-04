@@ -28,6 +28,7 @@ public:
     void regenerateMeshes();
     void unloadFarChunks(int playerChunkX,int playerChunkZ);
     const ChunkMap& getChunks() const;
+    BlockType getBlockAt(glm::ivec3 worldPos);
 private:
     FastNoiseLite m_noise;
     ChunkMap m_chunks;
