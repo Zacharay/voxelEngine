@@ -5,6 +5,7 @@
 
 #include <sys/types.h>
 
+
 #include "Config.hpp"
 #include "glm/vec3.hpp"
 #include "glm/vec2.hpp"
@@ -33,8 +34,9 @@ class World;
 
 
 class Chunk {
-    unsigned char blocks[Config::chunkSize][Config::chunkSize][Config::chunkSize];
+    unsigned char blocks[Config::chunkSize*Config::chunkSize*Config::chunkSize];
     World  *m_world;
+
     bool isBlockSolid(int x,int y,int z);
     u_int8_t computeCornerAo(FaceDirection faceDir,int corner,int x,int y,int z);
     inline uint8_t calcAO(bool side1, bool side2, bool corner);
@@ -45,6 +47,9 @@ public:
     const int m_chunkPositionZ;
     Chunk(int x,int y,int z,World *world);
 
+    inline unsigned int index(int x ,int y,int z)const {
+        return x + y*Config::chunkSize + z*Config::chunkSize*Config::chunkSize;
+    }
     void setBlock(BlockType block,int x,int y,int z);
     BlockType getBlock(int x,int y,int z);
     void generateMesh(std::vector<Face>&mesh, Chunk* chunkNx,Chunk* chunkPx,Chunk* chunkNy, Chunk* chunkPy,Chunk* chunkNz,Chunk* chunkPz);

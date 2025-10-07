@@ -10,6 +10,11 @@
 
 ChunkColumn::ChunkColumn(FastNoiseLite& m_noise,int x,int z,World *world) {
 
+    m_nbrChunkColumnNX = nullptr;
+    m_nbrChunkColumnNZ = nullptr;
+    m_nbrChunkColumnPX = nullptr;
+    m_nbrChunkColumnPZ = nullptr;
+
     m_posX = x;
     m_posZ = z;
     m_chunks.reserve(Config::chunkColumnHeight);

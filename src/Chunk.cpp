@@ -5,7 +5,7 @@
 #include "TextureManager.hpp"
 #include "WorldGenerator.hpp"
 #include "World.hpp"
-
+#include <iostream>
 
 
 //bottom right //bottom left //top left
@@ -30,30 +30,29 @@ constexpr std::array<std::array<glm::vec3, 6>, 6> faceVertices = {{
       glm::vec3(0.5f, -0.5f, -0.5f), glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(-0.5f, -0.5f, 0.5f) }
 }};
 
-Chunk::Chunk(const int x,const int y,const int z,World *world):m_world(world),blocks{},
+Chunk::Chunk(const int x,const int y,const int z,World* world):blocks{},
     m_chunkPositionX(x),
     m_chunkPositionY(y),
     m_chunkPositionZ(z)
 {
+        m_world = world;
+
         for(int i=0;i<Config::chunkSize;i++)
             for(int j=0;j<Config::chunkSize;j++)
                 for(int k=0;k<Config::chunkSize;k++) {
 
-                    blocks[i][j][k] = BlockType::Air;
+                    blocks[index(i,j,k)] = BlockType::Air;
                 }
 }
+
+
 bool Chunk::isBlockSolid(int x, int y, int z) {
-    if( x<0 || x >= Config::chunkSize||
-        y<0 || y >= Config::chunkSize||
-        z<0 || z >= Config::chunkSize  ) {
 
-            glm::vec3 globalPos = convertToWorldCoordinates(glm::vec3(x,y,z));
-            BlockType block = m_world->getBlockAt(globalPos);
-
-            return block != BlockType::Air;
-        }
-
-    return blocks[z][y][x] != BlockType::Air;
+    if( x<0 || x >= Config::chunkSize|| y<0 || y >= Config::chunkSize|| z<0 || z >= Config::chunkSize ) {
+        glm::vec3 globalPos = convertToWorldCoordinates(glm::vec3(x,y,z));
+        BlockType block = m_world->getBlockAt(globalPos); return block != BlockType::Air;
+    }
+    return blocks[index(x, y, z)] != BlockType::Air;
 }
 
 
@@ -216,10 +215,10 @@ u_int8_t Chunk::computeCornerAo(FaceDirection faceDir,int corner,int x,int y,int
 }
 
 void Chunk::setBlock(BlockType block,int x,int y,int z) {
-    blocks[z][y][x] = block;
+    blocks[index(x,y,z)] = block;
 }
 BlockType Chunk::getBlock(int x, int y, int z) {
-    return (BlockType)blocks[z][y][x];
+    return (BlockType)blocks[index(x,y,z)];
 }
 
 inline glm::vec3 Chunk::convertToWorldCoordinates(const glm::vec3 &coordinates) {
@@ -237,7 +236,7 @@ void Chunk::generateMesh(std::vector<Face>& mesh, Chunk* chunkNx, Chunk* chunkPx
         for (int y = 0; y < Config::chunkSize; y++) {
             for (int x = 0; x < Config::chunkSize; x++) {
 
-                if (blocks[z][y][x] == BlockType::Air) continue;
+                if (blocks[index(x,y,z)] == BlockType::Air) continue;
 
 
                 bool shouldRenderFace[6] = { false };
@@ -247,10 +246,10 @@ void Chunk::generateMesh(std::vector<Face>& mesh, Chunk* chunkNx, Chunk* chunkPx
                     if (chunkPz == nullptr) {
                         shouldRenderFace[Front] = true;
                     } else {
-                        shouldRenderFace[Front] = chunkPz->blocks[0][y][x] == BlockType::Air;
+                        shouldRenderFace[Front] = chunkPz->blocks[index(x,y,0)] == BlockType::Air;
                     }
                 } else {
-                    if (blocks[z + 1][y][x] == BlockType::Air) {
+                    if (blocks[index(x,y,z+1)] == BlockType::Air) {
                         shouldRenderFace[Front] = true;
                     }
                 }
@@ -260,10 +259,10 @@ void Chunk::generateMesh(std::vector<Face>& mesh, Chunk* chunkNx, Chunk* chunkPx
                     if (chunkNz == nullptr) {
                         shouldRenderFace[Back] = true;
                     } else {
-                        shouldRenderFace[Back] = chunkNz->blocks[Config::chunkSize - 1][y][x] == BlockType::Air;
+                        shouldRenderFace[Back] = chunkNz->blocks[index(x,y,Config::chunkSize-1)] == BlockType::Air;
                     }
                 } else {
-                    if (blocks[z - 1][y][x] == BlockType::Air) {
+                    if (blocks[index(x,y,z-1)] == BlockType::Air) {
                         shouldRenderFace[Back] = true;
                     }
                 }
@@ -273,10 +272,10 @@ void Chunk::generateMesh(std::vector<Face>& mesh, Chunk* chunkNx, Chunk* chunkPx
                     if (chunkNx == nullptr) {
                         shouldRenderFace[Left] = true;
                     } else {
-                        shouldRenderFace[Left] = chunkNx->blocks[z][y][Config::chunkSize - 1] == BlockType::Air;
+                        shouldRenderFace[Left] = chunkNx->blocks[index(Config::chunkSize-1,y,z)] == BlockType::Air;
                     }
                 } else {
-                    if (blocks[z][y][x - 1] == BlockType::Air) {
+                    if (blocks[index(x-1,y,z)] == BlockType::Air) {
                         shouldRenderFace[Left] = true;
                     }
                 }
@@ -286,10 +285,10 @@ void Chunk::generateMesh(std::vector<Face>& mesh, Chunk* chunkNx, Chunk* chunkPx
                     if (chunkPx == nullptr) {
                         shouldRenderFace[Right] = true;
                     } else {
-                        shouldRenderFace[Right] = chunkPx->blocks[z][y][0] == BlockType::Air;
+                        shouldRenderFace[Right] = chunkPx->blocks[index(0,y,z)] == BlockType::Air;
                     }
                 } else {
-                    if (blocks[z][y][x + 1] == BlockType::Air) {
+                    if (blocks[(index(x+1,y,z))] == BlockType::Air) {
                         shouldRenderFace[Right] = true;
                     }
                 }
@@ -299,10 +298,10 @@ void Chunk::generateMesh(std::vector<Face>& mesh, Chunk* chunkNx, Chunk* chunkPx
                     if (chunkPy == nullptr) {
                         shouldRenderFace[Top] = true;
                     } else {
-                        shouldRenderFace[Top] = chunkPy->blocks[z][0][x] == BlockType::Air;
+                        shouldRenderFace[Top] = chunkPy->blocks[index(x,0,z)] == BlockType::Air;
                     }
                 } else {
-                    if (blocks[z][y + 1][x] == BlockType::Air) {
+                    if (blocks[index(x,y+1,z)] == BlockType::Air) {
                         shouldRenderFace[Top] = true;
                     }
                 }
@@ -312,10 +311,10 @@ void Chunk::generateMesh(std::vector<Face>& mesh, Chunk* chunkNx, Chunk* chunkPx
                     if (chunkNy == nullptr) {
                         shouldRenderFace[Bottom] = true;
                     } else {
-                        shouldRenderFace[Bottom] = chunkNy->blocks[z][Config::chunkSize - 1][x] == BlockType::Air;
+                        shouldRenderFace[Bottom] = chunkNy->blocks[index(x,Config::chunkSize-1,z)] == BlockType::Air;
                     }
                 } else {
-                    if (blocks[z][y - 1][x] == BlockType::Air) {
+                    if (blocks[index(x,y-1,z)] == BlockType::Air) {
                         shouldRenderFace[Bottom] = true;
                     }
                 }
@@ -335,7 +334,7 @@ void Chunk::generateMesh(std::vector<Face>& mesh, Chunk* chunkNx, Chunk* chunkPx
                             face.vertices[j].ao = computeCornerAo((FaceDirection)i,cornerID,x,y,z);
 
                         }
-                        TextureManager::getTextureCoordinates(face.vertices,(BlockType)blocks[z][y][x],(FaceDirection)i);
+                        TextureManager::getTextureCoordinates(face.vertices,(BlockType)blocks[index(x,y,z)],(FaceDirection)i);
                         mesh.push_back(face);
                     }
                 }

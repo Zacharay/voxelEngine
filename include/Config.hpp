@@ -7,7 +7,7 @@ namespace Config {
     constexpr unsigned int chunkSize = 16;
     constexpr unsigned int chunkColumnHeight = 16;
 
-    constexpr int chunkRadius = 32;
+    constexpr int chunkRadius = 24;
 
     constexpr int noiseWidth = (chunkRadius * 2 ) * chunkSize;
 

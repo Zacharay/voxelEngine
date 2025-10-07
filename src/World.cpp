@@ -6,6 +6,7 @@
 
 
 World::World() {
+    //m_chunks.reserve(1024);
     m_noise.SetNoiseType(FastNoiseLite::NoiseType_Perlin);
     m_noise.SetFrequency(0.004f);
 }
@@ -48,25 +49,24 @@ void World::loadChunk(int chunkPosX,int chunkPosZ) {
 
 
 }
+auto divFloor = [](int a, int b) {
+    int div = a / b;
+    int rem = a % b;
+    if (rem < 0) {
+        div -= 1;
+        rem += b;
+    }
+    return std::pair<int,int>(div, rem);
+};
 BlockType World::getBlockAt(glm::ivec3 pos) {
-    int chunkX = pos.x / Config::chunkSize;
-    int chunkY = pos.y / Config::chunkSize;
-    int chunkZ = pos.z / Config::chunkSize;
-
-
+    auto [chunkX, localX] = divFloor(pos.x, Config::chunkSize);
+    auto [chunkY, localY] = divFloor(pos.y, Config::chunkSize);
+    auto [chunkZ, localZ] = divFloor(pos.z, Config::chunkSize);
 
     ChunkColumn* column = getChunkColumn(chunkX, chunkZ);
-    if (!column) {
-        // Return Air if chunk isn't loaded yet
-        return BlockType::Air;
-    }
+    if (!column) return BlockType::Air;
 
-    return column->getBlockAt(
-        chunkY,
-        pos.x % Config::chunkSize,
-        pos.y % Config::chunkSize,
-        pos.z % Config::chunkSize
-    );
+    return column->getBlockAt(chunkY, localX, localY, localZ);
 
 }
 
