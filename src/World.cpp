@@ -95,11 +95,19 @@ void World::unloadFarChunks(int playerChunkX,int playerChunkZ) {
 }
 void World::regenerateMeshes() {
 
+    int meshes_per_frame = 32;
+    int regenerated_count = 0;
+
     for(auto& pair : m_chunks) {
+        if (regenerated_count >= meshes_per_frame) {
+            break;
+        }
+
         ChunkColumn& chunkColumn = pair.second;
         if(chunkColumn.isMeshDirty) {
             chunkColumn.generateMesh();
             chunkColumn.uploadToGpu();
+            regenerated_count++;
         }
     }
 }

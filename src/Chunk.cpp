@@ -46,13 +46,34 @@ Chunk::Chunk(const int x,const int y,const int z,World* world):blocks{},
 }
 
 
-bool Chunk::isBlockSolid(int x, int y, int z) {
+bool Chunk::isBlockSolid(int x, int y, int z, Chunk* chunkNx, Chunk* chunkPx, Chunk* chunkNy, Chunk* chunkPy, Chunk* chunkNz, Chunk* chunkPz) {
 
-    if( x<0 || x >= Config::chunkSize|| y<0 || y >= Config::chunkSize|| z<0 || z >= Config::chunkSize ) {
-        glm::vec3 globalPos = convertToWorldCoordinates(glm::vec3(x,y,z));
-        BlockType block = m_world->getBlockAt(globalPos); return block != BlockType::Air;
+    //block inside this chunk
+    if (x >= 0 && x < Config::chunkSize &&
+        y >= 0 && y < Config::chunkSize &&
+        z >= 0 && z < Config::chunkSize)
+    {
+        return blocks[index(x, y, z)] != BlockType::Air;
     }
-    return blocks[index(x, y, z)] != BlockType::Air;
+
+    int outCount = (x < 0 || x >= Config::chunkSize) +
+                   (y < 0 || y >= Config::chunkSize) +
+                   (z < 0 || z >= Config::chunkSize);
+
+    //block outside chunk but not corner
+    if (outCount == 1) {
+
+        if (x < 0)                return chunkNx ? chunkNx->getBlock(Config::chunkSize + x, y, z) != BlockType::Air : false;
+        if (x >= Config::chunkSize) return chunkPx ? chunkPx->getBlock(x - Config::chunkSize, y, z) != BlockType::Air : false;
+        if (y < 0)                return chunkNy ? chunkNy->getBlock(x, Config::chunkSize + y, z) != BlockType::Air : false;
+        if (y >= Config::chunkSize) return chunkPy ? chunkPy->getBlock(x, y - Config::chunkSize, z) != BlockType::Air : false;
+        if (z < 0)                return chunkNz ? chunkNz->getBlock(x, y, Config::chunkSize + z) != BlockType::Air : false;
+        if (z >= Config::chunkSize) return chunkPz ? chunkPz->getBlock(x, y, z - Config::chunkSize) != BlockType::Air : false;
+    }
+
+    //block otuside chunk but corner
+    glm::vec3 globalPos = convertToWorldCoordinates(glm::vec3(x, y, z));
+    return m_world->getBlockAt(globalPos) != BlockType::Air;
 }
 
 
@@ -70,7 +91,7 @@ inline uint8_t Chunk::calcAO(bool side1, bool side2, bool corner)
     }
     return 255;
 }
-u_int8_t Chunk::computeCornerAo(FaceDirection faceDir,int corner,int x,int y,int z) {
+u_int8_t Chunk::computeCornerAo(FaceDirection faceDir,int corner,int x,int y,int z,Chunk* chunkNx, Chunk* chunkPx, Chunk* chunkNy, Chunk* chunkPy, Chunk* chunkNz, Chunk* chunkPz) {
     int d1x=0,d1y=0,d1z=0;
     int d2x=0,d2y=0,d2z=0;
     int d3x=0,d3y=0,d3z=0;
@@ -206,9 +227,9 @@ u_int8_t Chunk::computeCornerAo(FaceDirection faceDir,int corner,int x,int y,int
             break;
     }
 
-    bool side1 = isBlockSolid(x + d1x, y + d1y, z + d1z);
-    bool side2 = isBlockSolid(x + d2x, y + d2y, z + d2z);
-    bool side3 = isBlockSolid(x + d3x, y + d3y, z + d3z);
+    bool side1 = isBlockSolid(x + d1x, y + d1y, z + d1z,chunkNx, chunkPx, chunkNy, chunkPy, chunkNz, chunkPz);
+    bool side2 = isBlockSolid(x + d2x, y + d2y, z + d2z,chunkNx, chunkPx, chunkNy, chunkPy, chunkNz, chunkPz);
+    bool side3 = isBlockSolid(x + d3x, y + d3y, z + d3z,chunkNx, chunkPx, chunkNy, chunkPy, chunkNz, chunkPz);
 
     return calcAO(side1,side2,side3);
 
@@ -331,7 +352,8 @@ void Chunk::generateMesh(std::vector<Face>& mesh, Chunk* chunkNx, Chunk* chunkPx
                             int cornerID = triangleOrder[j];
                             glm::vec3 vertexPos = convertToWorldCoordinates(faceVertices[i][j]+ glm::vec3(x,y,z));
                             face.vertices[j].position = vertexPos;
-                            face.vertices[j].ao = computeCornerAo((FaceDirection)i,cornerID,x,y,z);
+                            face.vertices[j].ao = computeCornerAo((FaceDirection)i,cornerID,x,y,z,
+                                chunkNx, chunkPx, chunkNy, chunkPy, chunkNz, chunkPz);
 
                         }
                         TextureManager::getTextureCoordinates(face.vertices,(BlockType)blocks[index(x,y,z)],(FaceDirection)i);

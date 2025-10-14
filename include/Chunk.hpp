@@ -37,8 +37,8 @@ class Chunk {
     unsigned char blocks[Config::chunkSize*Config::chunkSize*Config::chunkSize];
     World  *m_world;
 
-    bool isBlockSolid(int x,int y,int z);
-    u_int8_t computeCornerAo(FaceDirection faceDir,int corner,int x,int y,int z);
+    bool isBlockSolid(int x, int y, int z, Chunk* chunkNx, Chunk* chunkPx, Chunk* chunkNy, Chunk* chunkPy, Chunk* chunkNz, Chunk* chunkPz);
+    u_int8_t computeCornerAo(FaceDirection faceDir,int corner,int x,int y,int z,Chunk* chunkNx, Chunk* chunkPx, Chunk* chunkNy, Chunk* chunkPy, Chunk* chunkNz, Chunk* chunkPz);
     inline uint8_t calcAO(bool side1, bool side2, bool corner);
 
 public:
