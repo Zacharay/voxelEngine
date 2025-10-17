@@ -24,25 +24,37 @@ ChunkColumn::ChunkColumn(FastNoiseLite& m_noise,int x,int z,World *world) {
 
     int offsetX = m_posX * Config::chunkSize;
     int offsetZ = m_posZ * Config::chunkSize;
-    for(int x=0;x<Config::chunkSize;x++)
-        for(int z=0;z<Config::chunkSize;z++) {
-
-            const float noiseVal = m_noise.GetNoise(static_cast<float>(x+offsetX), static_cast<float>(z+offsetZ)) + 1.0f;
-
-            const unsigned int blockHeight = (noiseVal / 2.0f) * Config::chunkMaxBlockHeight;
+    for(int x_local = 0; x_local < Config::chunkSize; x_local++) {
+        for(int z_local = 0; z_local < Config::chunkSize; z_local++) {
 
 
-            for(int y=0;y<=blockHeight;y++) {
+            const float noiseVal = m_noise.GetNoise(static_cast<float>(x_local + offsetX), static_cast<float>(z_local + offsetZ)) + 1.0f;
+            const int terrainHeight = static_cast<int>((noiseVal / 2.0f) * Config::chunkMaxBlockHeight);
 
-                const int chunkYPos = y/Config::chunkSize;
 
-                m_chunks[chunkYPos].setBlock(WorldGenerator::generateBlock(y),x,y - chunkYPos*Config::chunkSize,z);
+            for(int y_global = 0; y_global < Config::chunkMaxBlockHeight; y_global++) {
 
+                BlockType blockToSet;
+
+                if (y_global > terrainHeight) {
+
+                    if (y_global <= Config::SEA_LEVEL) {
+                        blockToSet = BlockType::Water;
+                    } else {
+                        blockToSet = BlockType::Air;
+                    }
+                } else {
+
+                    blockToSet = WorldGenerator::generateBlock(y_global);
+                }
+
+
+                const int chunkY = y_global / Config::chunkSize;
+                const int y_local = y_global % Config::chunkSize;
+                m_chunks[chunkY].setBlock(blockToSet, x_local, y_local, z_local);
             }
-
-
         }
-
+    }
     m_mesh.reserve(Config::chunkSize * Config::chunkSize * 6);
 }
 ChunkColumn::~ChunkColumn() {

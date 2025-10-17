@@ -24,7 +24,11 @@ namespace TextureManager {
             break;
             case BlockType::Sand:
                 ty = 0;
-                tx = 3;
+                tx = 9;
+            break;
+            case BlockType::Water:
+                ty = 0;
+                tx = 8;
             break;
             default:
                 break;

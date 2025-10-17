@@ -7,11 +7,13 @@ namespace Config {
     constexpr unsigned int chunkSize = 16;
     constexpr unsigned int chunkColumnHeight = 16;
 
+
+
     constexpr int chunkRadius = 32;
 
     constexpr int noiseWidth = (chunkRadius * 2 ) * chunkSize;
 
-
+    constexpr int SEA_LEVEL = 64;
     constexpr int chunkMaxBlockHeight = chunkSize * chunkColumnHeight;
 
     inline bool showFaceCount = false;
