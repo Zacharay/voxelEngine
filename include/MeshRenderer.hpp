@@ -12,14 +12,16 @@ class MeshRenderer {
 
     unsigned int m_textureAtlas;
 
-    std::unique_ptr<Shader> shader;
+    std::unique_ptr<Shader> m_solidShader;
+    std::unique_ptr<Shader> m_transparentShader;
     glm::mat4 m_viewMatrix;
     glm::mat4 m_projectionMatrix;
 
     public:
     MeshRenderer();
 
-    void renderChunks(const ChunkMap &chunks)const;
+    void renderSolidChunks(const ChunkMap &chunks)const;
+    void renderTransparentChunks(const ChunkMap &chunks)const;
     void setViewMatrix(const glm::mat4 &viewMatrix);
 
 };

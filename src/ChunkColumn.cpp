@@ -55,23 +55,33 @@ ChunkColumn::ChunkColumn(FastNoiseLite& m_noise,int x,int z,World *world) {
             }
         }
     }
-    m_mesh.reserve(Config::chunkSize * Config::chunkSize * 6);
+    m_solidMesh.reserve(Config::chunkSize * Config::chunkSize * 6);
+    m_transparentMesh.reserve(Config::chunkSize * Config::chunkSize );
 }
 ChunkColumn::~ChunkColumn() {
     destroyGL();           // free VAO/VBO
-    m_mesh.clear();
-    m_mesh.shrink_to_fit();
+    m_solidMesh.clear();
+    m_solidMesh.shrink_to_fit();
     m_chunks.clear();
     m_chunks.shrink_to_fit();
 }
 void ChunkColumn::destroyGL() {
-    if (m_VBO) {
-        glDeleteBuffers(1, &m_VBO);
-        m_VBO = 0;
+    if (m_solidVBO) {
+        glDeleteBuffers(1, &m_solidVBO);
+        m_solidVBO = 0;
     }
-    if (m_VAO) {
-        glDeleteVertexArrays(1, &m_VAO);
-        m_VAO = 0;
+    if (m_solidVAO) {
+        glDeleteVertexArrays(1, &m_solidVAO);
+        m_solidVAO = 0;
+    }
+
+    if (m_transparentVBO) {
+        glDeleteBuffers(1, &m_transparentVBO);
+        m_transparentVBO = 0;
+    }
+    if (m_transparentVAO) {
+        glDeleteVertexArrays(1, &m_transparentVAO);
+        m_transparentVAO = 0;
     }
 }
 BlockType ChunkColumn::getBlockAt(int chunkPosY, int x, int y, int z) {
@@ -81,18 +91,15 @@ BlockType ChunkColumn::getBlockAt(int chunkPosY, int x, int y, int z) {
 }
 
 void ChunkColumn::generateMesh() {
-    m_mesh.clear();
-    m_mesh.shrink_to_fit();
-    m_mesh.reserve(Config::chunkSize * Config::chunkSize * 6);
+    m_solidMesh.clear();
+    m_solidMesh.shrink_to_fit();
+    m_solidMesh.reserve(Config::chunkSize * Config::chunkSize * 6);
 
-    if (m_VBO) {
-        glDeleteBuffers(1, &m_VBO);
-        m_VBO = 0;
-    }
-    if (m_VAO) {
-        glDeleteVertexArrays(1, &m_VAO);
-        m_VAO = 0;
-    }
+    m_transparentMesh.clear();
+    m_transparentMesh.shrink_to_fit();
+    m_transparentMesh.reserve(Config::chunkSize * Config::chunkSize );
+
+    destroyGL();
 
     for(int i=0;i<16;i++) {
         Chunk &chunk = m_chunks[i];
@@ -107,7 +114,8 @@ void ChunkColumn::generateMesh() {
         Chunk *chunkPz = m_nbrChunkColumnPZ != nullptr ? m_nbrChunkColumnPZ->getChunk(i) : nullptr;
 
         chunk.generateMesh(
-            m_mesh,
+            m_solidMesh,
+            m_transparentMesh,
             chunkNx,
             chunkPx,
             chunkNy,
@@ -122,13 +130,13 @@ void ChunkColumn::generateMesh() {
     cpuMeshReady = true;
 }
 void ChunkColumn::uploadToGpu() {
-    glGenVertexArrays(1, &m_VAO);
-    glGenBuffers(1, &m_VBO);
-    glBindVertexArray(m_VAO);
+    glGenVertexArrays(1, &m_solidVAO);
+    glGenBuffers(1, &m_solidVBO);
+    glBindVertexArray(m_solidVAO);
 
 
-    glBindBuffer(GL_ARRAY_BUFFER, m_VBO);
-    glBufferData(GL_ARRAY_BUFFER, m_mesh.size() * sizeof(Face), m_mesh.data(), GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, m_solidVBO);
+    glBufferData(GL_ARRAY_BUFFER, m_solidMesh.size() * sizeof(Face), m_solidMesh.data(), GL_STATIC_DRAW);
 
     glEnableVertexAttribArray(0);
     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
@@ -138,9 +146,30 @@ void ChunkColumn::uploadToGpu() {
     glEnableVertexAttribArray(2);
     glVertexAttribPointer(2, 1, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Vertex), (void*)offsetof(Vertex, ao));
 
-    m_meshSize = m_mesh.size();
-    m_mesh.clear();
-    m_mesh.shrink_to_fit();
+    m_solidMeshSize = m_solidMesh.size();
+    m_solidMesh.clear();
+    m_solidMesh.shrink_to_fit();
+
+     //transparentMesh
+     glGenVertexArrays(1, &m_transparentVAO);
+     glGenBuffers(1, &m_transparentVBO);
+     glBindVertexArray(m_transparentVAO);
+
+
+     glBindBuffer(GL_ARRAY_BUFFER, m_transparentVBO);
+     glBufferData(GL_ARRAY_BUFFER, m_transparentMesh.size() * sizeof(Face), m_transparentMesh.data(), GL_STATIC_DRAW);
+
+     glEnableVertexAttribArray(0);
+     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
+
+     glEnableVertexAttribArray(1);
+     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, textureCoordinates));
+
+
+     m_transparentMeshSize = m_transparentMesh.size();
+     m_transparentMesh.clear();
+     m_transparentMesh.shrink_to_fit();
+
     gpuMeshReady = true;
 }
 
@@ -173,11 +202,14 @@ void ChunkColumn::disconnectNeighbours() {
     m_nbrChunkColumnPZ = nullptr;
     m_nbrChunkColumnNZ = nullptr;
 }
-void ChunkColumn::bindMesh()const {
-    glBindVertexArray(m_VAO);
+void ChunkColumn::bindSolidMesh()const {
+    glBindVertexArray(m_solidVAO);
+}
+void ChunkColumn::bindTransparentMesh()const {
+    glBindVertexArray(m_transparentVAO);
 }
 const std::vector<Face>& ChunkColumn::getMesh()const {
-    return m_mesh;
+    return m_solidMesh;
 }
 Chunk * ChunkColumn::getChunk(int height) {
     return &m_chunks[height];

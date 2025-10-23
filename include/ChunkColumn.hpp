@@ -10,7 +10,8 @@ struct Face;
 
 
 class ChunkColumn {
-    unsigned int m_VAO,m_VBO;
+    unsigned int m_solidVAO,m_solidVBO;
+    unsigned int m_transparentVAO,m_transparentVBO;
 
     int m_posX;
     int m_posZ;
@@ -22,7 +23,8 @@ class ChunkColumn {
 
 
     std::vector<Chunk> m_chunks;
-    std::vector<Face> m_mesh;
+    std::vector<Face> m_solidMesh;
+    std::vector<Face> m_transparentMesh;
 
 
 
@@ -32,13 +34,19 @@ public:
     bool cpuMeshReady = false;
     bool gpuMeshReady = false;
 
-    unsigned int m_meshSize;
+    unsigned int m_solidMeshSize;
+    unsigned int m_transparentMeshSize;
+
+
     ChunkColumn(FastNoiseLite& m_noise,int x,int z,World *world);
     ~ChunkColumn();
 
     void generateMesh();
     void uploadToGpu();
-    void bindMesh()const;
+
+    void bindSolidMesh()const;
+    void bindTransparentMesh()const;
+
     void setNeighbouringChunks(ChunkColumn* chunkNx,ChunkColumn* chunkPx,ChunkColumn* chunkNz,ChunkColumn* chunkPz);
     const std::vector<Face>& getMesh()const;
     Chunk *getChunk(int height);

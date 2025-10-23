@@ -90,3 +90,7 @@ void Shader::setInt(int data, const char *uniformName) {
     int uniformLocation = glGetUniformLocation(this->ID, uniformName);
     glUniform1i(uniformLocation, data);
 }
+void Shader::setFloat(float data,const char *uniformName) {
+    int uniformLocation = glGetUniformLocation(this->ID, uniformName);
+    glUniform1f(uniformLocation, data);
+}

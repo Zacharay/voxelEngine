@@ -70,7 +70,9 @@ void Application::onRender() {
     const ChunkMap &chunks = world->getChunks();
 
     meshRenderer->setViewMatrix(camera->getViewMatrix());
-    meshRenderer->renderChunks(chunks);
+
+    meshRenderer->renderSolidChunks(chunks);
+    meshRenderer->renderTransparentChunks(chunks);
 
 }
 void Application::onUpdate() {

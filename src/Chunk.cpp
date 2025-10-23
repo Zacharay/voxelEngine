@@ -46,50 +46,60 @@ Chunk::Chunk(const int x,const int y,const int z,World* world):blocks{},
 }
 
 
-bool Chunk::isBlockSolid(int x, int y, int z, Chunk* chunkNx, Chunk* chunkPx, Chunk* chunkNy, Chunk* chunkPy, Chunk* chunkNz, Chunk* chunkPz) {
+float Chunk::getBlockOcclusion(int x, int y, int z, Chunk* chunkNx, Chunk* chunkPx, Chunk* chunkNy, Chunk* chunkPy, Chunk* chunkNz, Chunk* chunkPz) {
 
-    //block inside this chunk
+    BlockType blockType;
+
+    // Block inside this chunk
     if (x >= 0 && x < Config::chunkSize &&
         y >= 0 && y < Config::chunkSize &&
         z >= 0 && z < Config::chunkSize)
     {
-        return blocks[index(x, y, z)] != BlockType::Air;
+        blockType = this->getBlock(x, y, z);
+    }
+    // Block outside chunk but not corner/edge (check direct neighbors)
+    else if ((x < 0 || x >= Config::chunkSize) + (y < 0 || y >= Config::chunkSize) + (z < 0 || z >= Config::chunkSize) == 1) {
+        if (x < 0)                blockType = chunkNx ? chunkNx->getBlock(Config::chunkSize + x, y, z) : BlockType::Air;
+        else if (x >= Config::chunkSize) blockType = chunkPx ? chunkPx->getBlock(x - Config::chunkSize, y, z) : BlockType::Air;
+        else if (y < 0)                blockType = chunkNy ? chunkNy->getBlock(x, Config::chunkSize + y, z) : BlockType::Air;
+        else if (y >= Config::chunkSize) blockType = chunkPy ? chunkPy->getBlock(x, y - Config::chunkSize, z) : BlockType::Air;
+        else if (z < 0)                blockType = chunkNz ? chunkNz->getBlock(x, y, Config::chunkSize + z) : BlockType::Air;
+        else /* (z >= Config::chunkSize)*/ blockType = chunkPz ? chunkPz->getBlock(x, y, z - Config::chunkSize) : BlockType::Air;
+    }
+    // Block outside chunk on an edge or corner
+    else {
+        glm::vec3 globalPos = convertToWorldCoordinates(glm::vec3(x, y, z));
+
+        blockType = m_world->getBlockAt(globalPos);
     }
 
-    int outCount = (x < 0 || x >= Config::chunkSize) +
-                   (y < 0 || y >= Config::chunkSize) +
-                   (z < 0 || z >= Config::chunkSize);
 
-    //block outside chunk but not corner
-    if (outCount == 1) {
-
-        if (x < 0)                return chunkNx ? chunkNx->getBlock(Config::chunkSize + x, y, z) != BlockType::Air : false;
-        if (x >= Config::chunkSize) return chunkPx ? chunkPx->getBlock(x - Config::chunkSize, y, z) != BlockType::Air : false;
-        if (y < 0)                return chunkNy ? chunkNy->getBlock(x, Config::chunkSize + y, z) != BlockType::Air : false;
-        if (y >= Config::chunkSize) return chunkPy ? chunkPy->getBlock(x, y - Config::chunkSize, z) != BlockType::Air : false;
-        if (z < 0)                return chunkNz ? chunkNz->getBlock(x, y, Config::chunkSize + z) != BlockType::Air : false;
-        if (z >= Config::chunkSize) return chunkPz ? chunkPz->getBlock(x, y, z - Config::chunkSize) != BlockType::Air : false;
+    if (blockType == BlockType::Air) {
+        return 0.0f;
+    } else if (blockType == BlockType::Water) {
+        return 0.4f;
+    } else {
+        return 1.0f;
     }
 
-    //block otuside chunk but corner
-    glm::vec3 globalPos = convertToWorldCoordinates(glm::vec3(x, y, z));
-    return m_world->getBlockAt(globalPos) != BlockType::Air;
 }
 
 
-inline uint8_t Chunk::calcAO(bool side1, bool side2, bool corner)
+inline uint8_t Chunk::calcAO(float side1, float side2, float corner)
 {
-    if (side1 && side2)
-        return 60;   // darkest (strong corner shadow)
-
-    int occ = int(side1) + int(side2) + int(corner);
-    switch (occ) {
-        case 0: return 255; // no occlusion
-        case 1: return 170; // slight shadow
-        case 2: return 110; // deeper shadow
-        case 3: return 60;  // almost blocked
+    if (side1 > 0.9f && side2 > 0.9f) {
+        return 60;
     }
-    return 255;
+
+    float totalOcclusion = side1 + side2 + corner;
+
+
+    float aoFactor = totalOcclusion / 3.0f; // Normalize occlusion to 0.0 - 1.0
+    uint8_t aoValue = static_cast<uint8_t>(255.0f - aoFactor * 195.0f); // Map 0->255, 1->60
+
+    return aoValue;
+
+
 }
 u_int8_t Chunk::computeCornerAo(FaceDirection faceDir,int corner,int x,int y,int z,Chunk* chunkNx, Chunk* chunkPx, Chunk* chunkNy, Chunk* chunkPy, Chunk* chunkNz, Chunk* chunkPz) {
     int d1x=0,d1y=0,d1z=0;
@@ -227,11 +237,11 @@ u_int8_t Chunk::computeCornerAo(FaceDirection faceDir,int corner,int x,int y,int
             break;
     }
 
-    bool side1 = isBlockSolid(x + d1x, y + d1y, z + d1z,chunkNx, chunkPx, chunkNy, chunkPy, chunkNz, chunkPz);
-    bool side2 = isBlockSolid(x + d2x, y + d2y, z + d2z,chunkNx, chunkPx, chunkNy, chunkPy, chunkNz, chunkPz);
-    bool side3 = isBlockSolid(x + d3x, y + d3y, z + d3z,chunkNx, chunkPx, chunkNy, chunkPy, chunkNz, chunkPz);
+    float sideOneOcclusion = getBlockOcclusion(x + d1x, y + d1y, z + d1z,chunkNx, chunkPx, chunkNy, chunkPy, chunkNz, chunkPz);
+    float sideTwoOcclusion = getBlockOcclusion(x + d2x, y + d2y, z + d2z,chunkNx, chunkPx, chunkNy, chunkPy, chunkNz, chunkPz);
+    float cornerOcclusion= getBlockOcclusion(x + d3x, y + d3y, z + d3z,chunkNx, chunkPx, chunkNy, chunkPy, chunkNz, chunkPz);
 
-    return calcAO(side1,side2,side3);
+    return calcAO(sideOneOcclusion,sideTwoOcclusion,cornerOcclusion);
 
 }
 
@@ -252,91 +262,75 @@ inline glm::vec3 Chunk::convertToWorldCoordinates(const glm::vec3 &coordinates) 
     return coordinates + offsetVec;
 
 }
-void Chunk::generateMesh(std::vector<Face>& mesh, Chunk* chunkNx, Chunk* chunkPx, Chunk* chunkNy, Chunk* chunkPy, Chunk* chunkNz, Chunk* chunkPz) {
-    for (int z= 0; z < Config::chunkSize; z++) {
+inline bool Chunk::isBlockTransparent(BlockType type) {
+    return type == BlockType::Air || type == BlockType::Water;
+}
+void Chunk::generateMesh(std::vector<Face>& solidMesh,std::vector<Face>&transparentMesh, Chunk* chunkNx, Chunk* chunkPx, Chunk* chunkNy, Chunk* chunkPy, Chunk* chunkNz, Chunk* chunkPz) {
+   for (int z = 0; z < Config::chunkSize; z++) {
         for (int y = 0; y < Config::chunkSize; y++) {
             for (int x = 0; x < Config::chunkSize; x++) {
 
-                if (blocks[index(x,y,z)] == BlockType::Air) continue;
-
+                BlockType currentBlockType = this->getBlock(x, y, z); // Używamy getBlock()
+                if (currentBlockType == BlockType::Air) continue;
 
                 bool shouldRenderFace[6] = { false };
+                BlockType neighborTypes[6];
 
-                // Check front face (Z+)
+
+                // Front (Z+)
                 if (z + 1 == Config::chunkSize) {
-                    if (chunkPz == nullptr) {
-                        shouldRenderFace[Front] = true;
-                    } else {
-                        shouldRenderFace[Front] = chunkPz->blocks[index(x,y,0)] == BlockType::Air;
-                    }
+                    neighborTypes[Front] = (chunkPz != nullptr) ? chunkPz->getBlock(x, y, 0) : BlockType::Air;
                 } else {
-                    if (blocks[index(x,y,z+1)] == BlockType::Air) {
-                        shouldRenderFace[Front] = true;
-                    }
+                    neighborTypes[Front] = this->getBlock(x, y, z + 1);
                 }
 
-                // Check back face (Z-)
+                // Back (Z-)
                 if (z == 0) {
-                    if (chunkNz == nullptr) {
-                        shouldRenderFace[Back] = true;
-                    } else {
-                        shouldRenderFace[Back] = chunkNz->blocks[index(x,y,Config::chunkSize-1)] == BlockType::Air;
-                    }
+                    neighborTypes[Back] = (chunkNz != nullptr) ? chunkNz->getBlock(x, y, Config::chunkSize - 1) : BlockType::Air;
                 } else {
-                    if (blocks[index(x,y,z-1)] == BlockType::Air) {
-                        shouldRenderFace[Back] = true;
-                    }
+                    neighborTypes[Back] = this->getBlock(x, y, z - 1);
                 }
 
-                // Check left face (X-)
+                // Left (X-)
                 if (x == 0) {
-                    if (chunkNx == nullptr) {
-                        shouldRenderFace[Left] = true;
-                    } else {
-                        shouldRenderFace[Left] = chunkNx->blocks[index(Config::chunkSize-1,y,z)] == BlockType::Air;
-                    }
+                    neighborTypes[Left] = (chunkNx != nullptr) ? chunkNx->getBlock(Config::chunkSize - 1, y, z) : BlockType::Air;
                 } else {
-                    if (blocks[index(x-1,y,z)] == BlockType::Air) {
-                        shouldRenderFace[Left] = true;
-                    }
+                    neighborTypes[Left] = this->getBlock(x - 1, y, z);
                 }
 
-                // Check right face (X+)
+                // Right (X+)
                 if (x + 1 == Config::chunkSize) {
-                    if (chunkPx == nullptr) {
-                        shouldRenderFace[Right] = true;
-                    } else {
-                        shouldRenderFace[Right] = chunkPx->blocks[index(0,y,z)] == BlockType::Air;
-                    }
+                    neighborTypes[Right] = (chunkPx != nullptr) ? chunkPx->getBlock(0, y, z) : BlockType::Air;
                 } else {
-                    if (blocks[(index(x+1,y,z))] == BlockType::Air) {
-                        shouldRenderFace[Right] = true;
-                    }
+                    neighborTypes[Right] = this->getBlock(x + 1, y, z);
                 }
 
-                // Check top face (Y+)
+                // Top (Y+)
                 if (y + 1 == Config::chunkSize) {
-                    if (chunkPy == nullptr) {
-                        shouldRenderFace[Top] = true;
-                    } else {
-                        shouldRenderFace[Top] = chunkPy->blocks[index(x,0,z)] == BlockType::Air;
-                    }
+                    neighborTypes[Top] = (chunkPy != nullptr) ? chunkPy->getBlock(x, 0, z) : BlockType::Air;
                 } else {
-                    if (blocks[index(x,y+1,z)] == BlockType::Air) {
-                        shouldRenderFace[Top] = true;
-                    }
+                    neighborTypes[Top] = this->getBlock(x, y + 1, z);
                 }
 
-                // Check bottom face (Y-)
+                // Bottom (Y-)
                 if (y == 0) {
-                    if (chunkNy == nullptr) {
-                        shouldRenderFace[Bottom] = true;
-                    } else {
-                        shouldRenderFace[Bottom] = chunkNy->blocks[index(x,Config::chunkSize-1,z)] == BlockType::Air;
-                    }
+                    neighborTypes[Bottom] = (chunkNy != nullptr) ? chunkNy->getBlock(x, Config::chunkSize - 1, z) : BlockType::Air;
                 } else {
-                    if (blocks[index(x,y-1,z)] == BlockType::Air) {
-                        shouldRenderFace[Bottom] = true;
+                    neighborTypes[Bottom] = this->getBlock(x, y - 1, z);
+                }
+
+
+                for (int i = 0; i < 6; i++) {
+                    if (currentBlockType == BlockType::Water) {
+
+                        if (neighborTypes[i] == BlockType::Air) {
+                            shouldRenderFace[i] = true;
+                        }
+                    } else {
+
+                        if (isBlockTransparent(neighborTypes[i])) {
+                            shouldRenderFace[i] = true;
+                        }
                     }
                 }
 
@@ -344,20 +338,24 @@ void Chunk::generateMesh(std::vector<Face>& mesh, Chunk* chunkNx, Chunk* chunkPx
                 //bottom-left 1
                 //top-left 2
                 //top-right 3
-                constexpr int triangleOrder[] = {0,1,2, 2,3,0};
+                constexpr int triangleOrder[] = {0, 1, 2, 2, 3, 0};
                 for (int i = 0; i < 6; i++) {
                     if (shouldRenderFace[i]) {
                         Face face;
                         for (int j = 0; j < 6; j++) {
                             int cornerID = triangleOrder[j];
-                            glm::vec3 vertexPos = convertToWorldCoordinates(faceVertices[i][j]+ glm::vec3(x,y,z));
+                            glm::vec3 vertexPos = convertToWorldCoordinates(faceVertices[i][j] + glm::vec3(x, y, z));
                             face.vertices[j].position = vertexPos;
-                            face.vertices[j].ao = computeCornerAo((FaceDirection)i,cornerID,x,y,z,
+                            face.vertices[j].ao = computeCornerAo((FaceDirection)i, cornerID, x, y, z,
                                 chunkNx, chunkPx, chunkNy, chunkPy, chunkNz, chunkPz);
-
                         }
-                        TextureManager::getTextureCoordinates(face.vertices,(BlockType)blocks[index(x,y,z)],(FaceDirection)i);
-                        mesh.push_back(face);
+                        TextureManager::getTextureCoordinates(face.vertices, currentBlockType, (FaceDirection)i);
+
+                        if (currentBlockType == BlockType::Water) {
+                            transparentMesh.push_back(face);
+                        } else {
+                            solidMesh.push_back(face);
+                        }
                     }
                 }
             }

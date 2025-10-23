@@ -37,9 +37,9 @@ class Chunk {
     unsigned char blocks[Config::chunkSize*Config::chunkSize*Config::chunkSize];
     World  *m_world;
 
-    bool isBlockSolid(int x, int y, int z, Chunk* chunkNx, Chunk* chunkPx, Chunk* chunkNy, Chunk* chunkPy, Chunk* chunkNz, Chunk* chunkPz);
+    float getBlockOcclusion(int x, int y, int z, Chunk* chunkNx, Chunk* chunkPx, Chunk* chunkNy, Chunk* chunkPy, Chunk* chunkNz, Chunk* chunkPz);
     u_int8_t computeCornerAo(FaceDirection faceDir,int corner,int x,int y,int z,Chunk* chunkNx, Chunk* chunkPx, Chunk* chunkNy, Chunk* chunkPy, Chunk* chunkNz, Chunk* chunkPz);
-    inline uint8_t calcAO(bool side1, bool side2, bool corner);
+    inline uint8_t calcAO(float side1, float side2, float corner);
 
 public:
     const int m_chunkPositionX;
@@ -50,9 +50,10 @@ public:
     inline unsigned int index(int x ,int y,int z)const {
         return x + y*Config::chunkSize + z*Config::chunkSize*Config::chunkSize;
     }
+    inline bool isBlockTransparent(BlockType type) ;
     void setBlock(BlockType block,int x,int y,int z);
     BlockType getBlock(int x,int y,int z);
-    void generateMesh(std::vector<Face>&mesh, Chunk* chunkNx,Chunk* chunkPx,Chunk* chunkNy, Chunk* chunkPy,Chunk* chunkNz,Chunk* chunkPz);
+    void generateMesh(std::vector<Face>&solidMesh,std::vector<Face>&transparentMesh, Chunk* chunkNx,Chunk* chunkPx,Chunk* chunkNy, Chunk* chunkPy,Chunk* chunkNz,Chunk* chunkPz);
 
     inline glm::vec3 convertToWorldCoordinates(const glm::vec3 &coordinates);
 
