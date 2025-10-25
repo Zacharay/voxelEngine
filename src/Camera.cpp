@@ -13,7 +13,7 @@ Camera::Camera(glm::vec3 position, glm::vec3 front, glm::vec3 up) {
 
 }
 void Camera::processKeyboardInput(Camera_Movement direction, float deltaTime) {
-    const float cameraSpeed = 100.0f * deltaTime;
+    const float cameraSpeed = 50.0f * deltaTime;
 
     glm::vec3 right = glm::normalize(glm::cross(m_front, m_up));
 
@@ -38,8 +38,6 @@ void Camera::processKeyboardInput(Camera_Movement direction, float deltaTime) {
 }
 
 void Camera::processMouseInput(float xOffset, float yOffset) {
-
-
 
     yaw   += xOffset * 1.5f;
     pitch += yOffset * 1.5f;

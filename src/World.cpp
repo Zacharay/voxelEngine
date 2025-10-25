@@ -9,6 +9,21 @@ World::World() {
     //m_chunks.reserve(1024);
     m_noise.SetNoiseType(FastNoiseLite::NoiseType_Perlin);
     m_noise.SetFrequency(0.004f);
+
+    m_noise.SetFractalType(FastNoiseLite::FractalType_FBm);
+    m_noise.SetFractalOctaves(4);
+    m_noise.SetFractalLacunarity(2.0f);
+    m_noise.SetFractalGain(0.5);
+
+
+    m_treeNoise.SetNoiseType(FastNoiseLite::NoiseType_Cellular);
+    m_treeNoise.SetFrequency(1000.00f);
+    m_treeNoise.SetCellularDistanceFunction(FastNoiseLite::CellularDistanceFunction_EuclideanSq);
+    m_treeNoise.SetCellularJitter(5.9f);
+    m_treeNoise.SetCellularReturnType(FastNoiseLite::CellularReturnType_Distance2);
+
+    m_noise.SetSeed(time(0));
+    m_treeNoise.SetSeed(time(0));
 }
 void World::loadChunk(int chunkPosX,int chunkPosZ) {
 
@@ -17,7 +32,7 @@ void World::loadChunk(int chunkPosX,int chunkPosZ) {
     if(m_chunks.find(glm::ivec2(chunkPosX, chunkPosZ)) != m_chunks.end()) {
         return;
     }
-    ChunkColumn chunk(m_noise,chunkPosX,chunkPosZ,this);
+    ChunkColumn chunk(m_noise,m_treeNoise,chunkPosX,chunkPosZ,this);
 
     ChunkColumn* chunkNx= getChunkColumn(chunkPosX - 1 ,chunkPosZ);
     ChunkColumn* chunkPx= getChunkColumn(chunkPosX + 1 ,chunkPosZ);

@@ -80,7 +80,7 @@ void Application::onUpdate() {
     float deltaTime = currentFrame - m_lastFrame;
     m_lastFrame = currentFrame;
 
-    processInput(deltaTime);
+     processInput(deltaTime);
 
      glm::vec3 playerPos = camera->getPosition();
 

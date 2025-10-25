@@ -9,7 +9,8 @@
 #include "Config.hpp"
 #include "glm/vec3.hpp"
 #include "glm/vec2.hpp"
-#include "WorldGenerator.hpp"
+
+enum class BlockType:unsigned char;
 
 struct Vertex {
     glm::vec3 position;
@@ -34,7 +35,7 @@ class World;
 
 
 class Chunk {
-    unsigned char blocks[Config::chunkSize*Config::chunkSize*Config::chunkSize];
+    BlockType blocks[Config::chunkSize*Config::chunkSize*Config::chunkSize];
     World  *m_world;
 
     float getBlockOcclusion(int x, int y, int z, Chunk* chunkNx, Chunk* chunkPx, Chunk* chunkNy, Chunk* chunkPy, Chunk* chunkNz, Chunk* chunkPz);

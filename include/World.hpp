@@ -31,6 +31,8 @@ public:
     BlockType getBlockAt(glm::ivec3 worldPos);
 private:
     FastNoiseLite m_noise;
+    FastNoiseLite m_treeNoise;
+
     ChunkMap m_chunks;
     void setNeighbours();
     ChunkColumn* getChunkColumn(int chunkPosX,int chunkPosZ);

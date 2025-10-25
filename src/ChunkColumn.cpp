@@ -8,7 +8,7 @@
 #include "WorldGenerator.hpp"
 
 
-ChunkColumn::ChunkColumn(FastNoiseLite& m_noise,int x,int z,World *world) {
+ChunkColumn::ChunkColumn(FastNoiseLite& m_noise,FastNoiseLite &treeNoise,int x,int z,World *world) {
 
     m_nbrChunkColumnNX = nullptr;
     m_nbrChunkColumnNZ = nullptr;
@@ -22,39 +22,49 @@ ChunkColumn::ChunkColumn(FastNoiseLite& m_noise,int x,int z,World *world) {
         m_chunks.emplace_back(m_posX,i,m_posZ,world);
     }
 
-    int offsetX = m_posX * Config::chunkSize;
-    int offsetZ = m_posZ * Config::chunkSize;
-    for(int x_local = 0; x_local < Config::chunkSize; x_local++) {
-        for(int z_local = 0; z_local < Config::chunkSize; z_local++) {
+
+    unsigned int offsetX = m_posX * Config::chunkSize;
+    unsigned int  offsetZ = m_posZ * Config::chunkSize;
+    for(unsigned int localX = 0; localX < Config::chunkSize; localX++) {
+        for(unsigned int localZ = 0; localZ < Config::chunkSize; localZ++) {
+            const int globalX = localX + offsetX;
+            const int globalZ = localZ + offsetZ;
 
 
-            const float noiseVal = m_noise.GetNoise(static_cast<float>(x_local + offsetX), static_cast<float>(z_local + offsetZ)) + 1.0f;
+            const float noiseVal = m_noise.GetNoise(static_cast<float>(globalX), static_cast<float>(globalZ)) + 1.0f;
             const int terrainHeight = static_cast<int>((noiseVal / 2.0f) * Config::chunkMaxBlockHeight);
 
 
-            for(int y_global = 0; y_global < Config::chunkMaxBlockHeight; y_global++) {
+            for(int globalY = 0; globalY < Config::chunkMaxBlockHeight; globalY++) {
 
                 BlockType blockToSet;
+                if (globalY > terrainHeight) {
 
-                if (y_global > terrainHeight) {
-
-                    if (y_global <= Config::SEA_LEVEL) {
+                    if (globalY <= Config::SEA_LEVEL) {
                         blockToSet = BlockType::Water;
                     } else {
+
                         blockToSet = BlockType::Air;
                     }
                 } else {
 
-                    blockToSet = WorldGenerator::generateBlock(y_global);
+                    blockToSet = WorldGenerator::generateBlock(globalY);
                 }
 
 
-                const int chunkY = y_global / Config::chunkSize;
-                const int y_local = y_global % Config::chunkSize;
-                m_chunks[chunkY].setBlock(blockToSet, x_local, y_local, z_local);
+                const int chunkY = globalY / Config::chunkSize;
+                const int localY = globalY % Config::chunkSize;
+                if( m_chunks[chunkY].getBlock(localX, localY, localZ)==BlockType::Air) {
+                    m_chunks[chunkY].setBlock(blockToSet, localX, localY, localZ);
+                }
             }
+
+
+            spawnTree(treeNoise,globalX,globalZ,localX,localZ,terrainHeight);
+
         }
     }
+
     m_solidMesh.reserve(Config::chunkSize * Config::chunkSize * 6);
     m_transparentMesh.reserve(Config::chunkSize * Config::chunkSize );
 }
@@ -88,6 +98,27 @@ BlockType ChunkColumn::getBlockAt(int chunkPosY, int x, int y, int z) {
     if (chunkPosY < 0 || chunkPosY >= m_chunks.size()) return BlockType::Air;
     return m_chunks[chunkPosY].getBlock(x, y, z);
 
+}
+void ChunkColumn::spawnTree(FastNoiseLite &treeNoise,int globalX,int globalZ,int localX,int localZ,int terrainHeight) {
+    const float treeNoiseVal = treeNoise.GetNoise(static_cast<float>(globalX), static_cast<float>(globalZ)) ;
+    const float treeSpawnThreshold = 7.0f;
+
+
+
+    if(treeNoiseVal > treeSpawnThreshold && terrainHeight > Config::SEA_LEVEL) {
+
+        int surface_chunkY = terrainHeight / Config::chunkSize;
+        int surface_y_local = terrainHeight % Config::chunkSize;
+
+        if (surface_chunkY >= 0 && surface_chunkY < Config::chunkColumnHeight) {
+            BlockType surfaceBlock = m_chunks[surface_chunkY].getBlock(localX, surface_y_local, localZ);
+
+            if (surfaceBlock == BlockType::Grass) {
+                WorldGenerator::buildTree(this, localX, terrainHeight + 1, localZ);
+            }
+        }
+
+    }
 }
 
 void ChunkColumn::generateMesh() {

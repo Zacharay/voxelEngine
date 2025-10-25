@@ -38,9 +38,10 @@ public:
     unsigned int m_transparentMeshSize;
 
 
-    ChunkColumn(FastNoiseLite& m_noise,int x,int z,World *world);
+    ChunkColumn(FastNoiseLite& m_noise,FastNoiseLite &treeNoise,int x,int z,World *world);
     ~ChunkColumn();
 
+    void spawnTree(FastNoiseLite &treeNoise,int globalX,int globalZ,int localX,int localZ,int terrainHeight) ;
     void generateMesh();
     void uploadToGpu();
 

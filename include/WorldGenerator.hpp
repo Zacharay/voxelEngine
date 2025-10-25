@@ -1,13 +1,20 @@
-#include <glm/vec3.hpp>
 #pragma once
+
+#include <glm/vec3.hpp>
+
+#include "Config.hpp"
+class ChunkColumn;
+
 // Define block types
-enum BlockType {
+enum class BlockType :unsigned char{
     Air,
     Water,
     Grass,
     Sand,
     Stone,
     Dirt,
+    OAK_LOG,
+    OAK_LEAVES,
     BlockTypeCount
 };
 
@@ -15,15 +22,18 @@ enum BlockType {
 namespace WorldGenerator {
     inline BlockType generateBlock(int blockHeight) {
         BlockType block;
-        if(blockHeight<60) {
-            block = BlockType::Stone;
+        if(blockHeight < Config::SEA_LEVEL + 5 && blockHeight > Config::SEA_LEVEL - 40) {
+            block = BlockType::Sand;
         }
-        else if(blockHeight > 60 && blockHeight < 75) {
-            block= BlockType::Sand;
+        else if (blockHeight <= Config::SEA_LEVEL - 40) {
+            block = BlockType::Stone;
         }
         else {
             block = BlockType::Grass;
         }
         return block;
     }
+
+    void buildTree (ChunkColumn *chunkColumn,int x_local,int y_start,int z_local);
+
 }

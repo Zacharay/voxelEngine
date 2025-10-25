@@ -1,6 +1,7 @@
 #pragma once
 #include <glm/vec2.hpp>
 #include "Chunk.hpp"
+#include "WorldGenerator.hpp"
 
 
 namespace TextureManager {
@@ -30,6 +31,20 @@ namespace TextureManager {
                 ty = 0;
                 tx = 8;
             break;
+            case BlockType::OAK_LOG:
+                if(fDir == FaceDirection::Top || fDir == FaceDirection::Bottom ) {
+                    tx = 5;
+                }
+                else {
+                    tx = 6;
+                }
+                ty = 0;
+
+                break;
+            case BlockType::OAK_LEAVES:
+                ty = 0;
+                tx = 7;
+                break;
             default:
                 break;
         }

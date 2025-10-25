@@ -87,15 +87,19 @@ float Chunk::getBlockOcclusion(int x, int y, int z, Chunk* chunkNx, Chunk* chunk
 
 inline uint8_t Chunk::calcAO(float side1, float side2, float corner)
 {
+    const float MAX_AO = 255.0f;
+    const float AO_SCALE = 195.0f;
+    const int MIN_AO = 60;
+
     if (side1 > 0.9f && side2 > 0.9f) {
-        return 60;
+        return MIN_AO;
     }
 
     float totalOcclusion = side1 + side2 + corner;
 
 
     float aoFactor = totalOcclusion / 3.0f; // Normalize occlusion to 0.0 - 1.0
-    uint8_t aoValue = static_cast<uint8_t>(255.0f - aoFactor * 195.0f); // Map 0->255, 1->60
+    uint8_t aoValue = static_cast<uint8_t>(MAX_AO - aoFactor * AO_SCALE); // Map 0->255, 1->60
 
     return aoValue;
 
@@ -111,20 +115,28 @@ u_int8_t Chunk::computeCornerAo(FaceDirection faceDir,int corner,int x,int y,int
     //bottom-left 1
     //top-left 2
     //top-right 3
+
+    enum CornerDirection {
+        BOTTOM_RIGHT,
+        BOTTOM_LEFT,
+        TOP_LEFT,
+        TOP_RIGHT
+    };
+
     switch (faceDir) {
         case FaceDirection::Top:
             switch (corner) {
-                case 0:
+                case BOTTOM_RIGHT:
                     d1x = 1, d1y = 1, d1z = 0;
                     d2x = 0, d2y = 1, d2z = 1;
                     d3x = 1, d3y = 1, d3z = 1;
                 break;
-                case 1:
+                case BOTTOM_LEFT:
                     d1x = -1, d1y = 1, d1z = 0;
                     d2x = 0, d2y = 1, d2z = 1;
                     d3x = -1, d3y = 1, d3z = 1;
                 break;
-                case 2:
+                case TOP_LEFT:
                     d1x = -1, d1y = 1, d1z = 0;
                     d2x = 0, d2y = 1, d2z = -1;
                     d3x = -1, d3y = 1, d3z = -1;
@@ -136,25 +148,48 @@ u_int8_t Chunk::computeCornerAo(FaceDirection faceDir,int corner,int x,int y,int
                 break;
             }
             break;
-
+        case FaceDirection::Bottom:
+            switch (corner) {
+                case BOTTOM_RIGHT:
+                    d1x = -1, d1y = -1, d1z =  0;
+                d2x =  0, d2y = -1, d2z =  1;
+                d3x = -1, d3y = -1, d3z =  1;
+                break;
+                case BOTTOM_LEFT:
+                    d1x =  1, d1y = -1, d1z =  0;
+                d2x =  0, d2y = -1, d2z =  1;
+                d3x =  1, d3y = -1, d3z =  1;
+                break;
+                case TOP_LEFT:
+                    d1x =  1, d1y = -1, d1z =  0;
+                d2x =  0, d2y = -1, d2z = -1;
+                d3x =  1, d3y = -1, d3z = -1;
+                break;
+                case TOP_RIGHT:
+                    d1x = -1, d1y = -1, d1z =  0;
+                d2x =  0, d2y = -1, d2z = -1;
+                d3x = -1, d3y = -1, d3z = -1;
+                break;
+            }
+        break;
         case FaceDirection::Front:
             switch (corner) {
-                case 0:
+                case BOTTOM_RIGHT:
                     d1x = 1, d1y = 0, d1z = 1;
                     d2x = 0, d2y = -1, d2z = 1;
                     d3x = 1, d3y = -1, d3z = 1;
                 break;
-                case 1:
+                case BOTTOM_LEFT:
                     d1x = -1, d1y = 0, d1z = 1;
                     d2x = 0, d2y = -1, d2z =  1;
                     d3x = -1, d3y = -1, d3z = 1;
                 break;
-                case 2:
+                case TOP_LEFT:
                     d1x = -1, d1y = 0, d1z = 1;
                     d2x = 0, d2y = 1, d2z = 1;
                     d3x = -1, d3y = 1, d3z = 1;
                 break;
-                case 3:
+                case TOP_RIGHT:
                     d1x = 1, d1y = 0, d1z = 1;
                     d2x = 0, d2y = 1, d2z = 1;
                     d3x = 1, d3y = 1, d3z = 1;
@@ -163,22 +198,22 @@ u_int8_t Chunk::computeCornerAo(FaceDirection faceDir,int corner,int x,int y,int
         break;
         case FaceDirection::Back:
             switch (corner) {
-                case 0:
+                case BOTTOM_RIGHT:
                     d1x = 1, d1y = 0, d1z = -1;
                     d2x = 0, d2y = -1, d2z = -1;
                     d3x = 1, d3y = -1, d3z = -1;
                 break;
-                case 1:
+                case BOTTOM_LEFT:
                     d1x = -1, d1y = 0, d1z =  -1;
                     d2x = 0, d2y = -1, d2z =  -1;
                     d3x = -1, d3y = -1, d3z = -1;
                 break;
-                case 2:
+                case TOP_LEFT:
                     d1x = -1, d1y = 0, d1z = -1;
                     d2x = 0, d2y = 1, d2z = -1;
                     d3x = -1, d3y = 1, d3z = -1;
                 break;
-                case 3:
+                case TOP_RIGHT:
                     d1x = 1, d1y = 0, d1z = -1;
                     d2x = 0, d2y = 1, d2z = -1;
                     d3x = 1, d3y = 1, d3z = -1;
@@ -187,22 +222,22 @@ u_int8_t Chunk::computeCornerAo(FaceDirection faceDir,int corner,int x,int y,int
         break;
         case FaceDirection::Right:
             switch (corner) {
-                case 0:
+                case BOTTOM_RIGHT:
                     d1x = 1, d1y = 0, d1z = 1;
                     d2x = 1, d2y = -1, d2z = 0;
                     d3x = 1, d3y = -1, d3z = 1;
                 break;
-                case 1:
+                case BOTTOM_LEFT:
                     d1x = 1, d1y = 0, d1z =  -1;
                     d2x = 1, d2y = -1, d2z =  0;
                     d3x = 1, d3y = -1, d3z = -1;
                 break;
-                case 2:
+                case TOP_LEFT:
                     d1x = 1, d1y = 0, d1z = -1;
                     d2x = 1, d2y = 1, d2z = 0;
                     d3x = 1, d3y = 1, d3z = 1;
                 break;
-                case 3:
+                case TOP_RIGHT:
                     d1x = 1, d1y = 0, d1z = 1;
                     d2x = 1, d2y = 1, d2z = 0;
                     d3x = 1, d3y = 1, d3z = 1;
@@ -211,22 +246,22 @@ u_int8_t Chunk::computeCornerAo(FaceDirection faceDir,int corner,int x,int y,int
         break;
         case FaceDirection::Left:
             switch (corner) {
-                case 0:
+                case BOTTOM_RIGHT:
                     d1x = -1, d1y = 0, d1z = 1;
                     d2x = -1, d2y = -1, d2z = 0;
                     d3x = -1, d3y = -1, d3z = 1;
                 break;
-                case 1:
+                case BOTTOM_LEFT:
                     d1x = -1, d1y = 0, d1z =  -1;
                     d2x = -1, d2y = -1, d2z =  0;
                     d3x = -1, d3y = -1, d3z = -1;
                 break;
-                case 2:
+                case TOP_LEFT:
                     d1x = -1, d1y = 0, d1z = -1;
                     d2x = -1, d2y = 1, d2z = 0;
                     d3x = -1, d3y = 1, d3z = 1;
                 break;
-                case 3:
+                case TOP_RIGHT:
                     d1x = -1, d1y = 0, d1z = 1;
                     d2x = -1, d2y = 1, d2z = 0;
                     d3x = -1, d3y = 1, d3z = 1;
@@ -246,6 +281,12 @@ u_int8_t Chunk::computeCornerAo(FaceDirection faceDir,int corner,int x,int y,int
 }
 
 void Chunk::setBlock(BlockType block,int x,int y,int z) {
+    if(x<0 || y<0 || z<0 || x>Config::chunkSize || y>Config::chunkSize || z>Config::chunkSize) {
+        std::cerr<<"Error in setBlock()"<<std::endl;
+        return;
+    }
+
+
     blocks[index(x,y,z)] = block;
 }
 BlockType Chunk::getBlock(int x, int y, int z) {
@@ -270,7 +311,7 @@ void Chunk::generateMesh(std::vector<Face>& solidMesh,std::vector<Face>&transpar
         for (int y = 0; y < Config::chunkSize; y++) {
             for (int x = 0; x < Config::chunkSize; x++) {
 
-                BlockType currentBlockType = this->getBlock(x, y, z); // Używamy getBlock()
+                BlockType currentBlockType = this->getBlock(x, y, z);
                 if (currentBlockType == BlockType::Air) continue;
 
                 bool shouldRenderFace[6] = { false };
@@ -321,7 +362,7 @@ void Chunk::generateMesh(std::vector<Face>& solidMesh,std::vector<Face>&transpar
 
 
                 for (int i = 0; i < 6; i++) {
-                    if (currentBlockType == BlockType::Water) {
+                    if (currentBlockType == BlockType::Water ) {
 
                         if (neighborTypes[i] == BlockType::Air) {
                             shouldRenderFace[i] = true;
@@ -351,7 +392,7 @@ void Chunk::generateMesh(std::vector<Face>& solidMesh,std::vector<Face>&transpar
                         }
                         TextureManager::getTextureCoordinates(face.vertices, currentBlockType, (FaceDirection)i);
 
-                        if (currentBlockType == BlockType::Water) {
+                        if (currentBlockType == BlockType::Water ) {
                             transparentMesh.push_back(face);
                         } else {
                             solidMesh.push_back(face);
