@@ -5,10 +5,12 @@
 #include "Config.hpp"
 #include "glad/glad.h"
 #include <iostream>
+#include <World.hpp>
+
 #include "WorldGenerator.hpp"
 
 
-ChunkColumn::ChunkColumn(FastNoiseLite& m_noise,FastNoiseLite &treeNoise,int x,int z,World *world) {
+ChunkColumn::ChunkColumn(int x,int z,World *world) {
 
     m_nbrChunkColumnNX = nullptr;
     m_nbrChunkColumnNZ = nullptr;
@@ -31,10 +33,12 @@ ChunkColumn::ChunkColumn(FastNoiseLite& m_noise,FastNoiseLite &treeNoise,int x,i
             const int globalZ = localZ + offsetZ;
 
 
-            const float noiseVal = m_noise.GetNoise(static_cast<float>(globalX), static_cast<float>(globalZ)) + 1.0f;
+            const float noiseVal = world->getHeightNoiseVal(globalX,globalZ);
             const int terrainHeight = static_cast<int>((noiseVal / 2.0f) * Config::chunkMaxBlockHeight);
 
-
+            float temp = world->getTemperatureNoiseVal(globalX,globalZ);
+            float humiditiy = world->getHumidityNoiseVal(globalX,globalZ);
+            BiomeType biome = WorldGenerator::getBiomeType(temp,humiditiy,terrainHeight);
             for(int globalY = 0; globalY < Config::chunkMaxBlockHeight; globalY++) {
 
                 BlockType blockToSet;
@@ -48,7 +52,7 @@ ChunkColumn::ChunkColumn(FastNoiseLite& m_noise,FastNoiseLite &treeNoise,int x,i
                     }
                 } else {
 
-                    blockToSet = WorldGenerator::generateBlock(globalY);
+                    blockToSet = WorldGenerator::generateBlock(globalY,biome);
                 }
 
 
@@ -59,8 +63,8 @@ ChunkColumn::ChunkColumn(FastNoiseLite& m_noise,FastNoiseLite &treeNoise,int x,i
                 }
             }
 
-
-            spawnTree(treeNoise,globalX,globalZ,localX,localZ,terrainHeight);
+            float treeNoiseVal = world->getTreeNoiseVal(globalX,globalZ);
+            WorldGenerator::spawnNature(this,treeNoiseVal,localX,terrainHeight,localZ,biome);
 
         }
     }
@@ -99,26 +103,8 @@ BlockType ChunkColumn::getBlockAt(int chunkPosY, int x, int y, int z) {
     return m_chunks[chunkPosY].getBlock(x, y, z);
 
 }
-void ChunkColumn::spawnTree(FastNoiseLite &treeNoise,int globalX,int globalZ,int localX,int localZ,int terrainHeight) {
-    const float treeNoiseVal = treeNoise.GetNoise(static_cast<float>(globalX), static_cast<float>(globalZ)) ;
-    const float treeSpawnThreshold = 7.0f;
+void ChunkColumn::spawnTree(const float treeNoiseVal,int localX,int localZ,int terrainHeight) {
 
-
-
-    if(treeNoiseVal > treeSpawnThreshold && terrainHeight > Config::SEA_LEVEL) {
-
-        int surface_chunkY = terrainHeight / Config::chunkSize;
-        int surface_y_local = terrainHeight % Config::chunkSize;
-
-        if (surface_chunkY >= 0 && surface_chunkY < Config::chunkColumnHeight) {
-            BlockType surfaceBlock = m_chunks[surface_chunkY].getBlock(localX, surface_y_local, localZ);
-
-            if (surfaceBlock == BlockType::Grass) {
-                WorldGenerator::buildTree(this, localX, terrainHeight + 1, localZ);
-            }
-        }
-
-    }
 }
 
 void ChunkColumn::generateMesh() {

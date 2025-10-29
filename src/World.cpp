@@ -6,10 +6,9 @@
 
 
 World::World() {
-    //m_chunks.reserve(1024);
+
     m_noise.SetNoiseType(FastNoiseLite::NoiseType_Perlin);
     m_noise.SetFrequency(0.004f);
-
     m_noise.SetFractalType(FastNoiseLite::FractalType_FBm);
     m_noise.SetFractalOctaves(4);
     m_noise.SetFractalLacunarity(2.0f);
@@ -22,9 +21,29 @@ World::World() {
     m_treeNoise.SetCellularJitter(5.9f);
     m_treeNoise.SetCellularReturnType(FastNoiseLite::CellularReturnType_Distance2);
 
+    m_temperatureNoise.SetNoiseType(FastNoiseLite::NoiseType_OpenSimplex2);
+    m_temperatureNoise.SetFrequency(0.0002f);
+    m_temperatureNoise.SetFractalType(FastNoiseLite::FractalType_FBm);
+    m_temperatureNoise.SetFractalOctaves(3);
+    m_temperatureNoise.SetFractalLacunarity(2.0f);
+    m_temperatureNoise.SetFractalGain(0.5f);
+    m_temperatureNoise.SetSeed(static_cast<int>(time(0)) + 1);
+
+
+    m_humidityNoise.SetNoiseType(FastNoiseLite::NoiseType_OpenSimplex2);
+    m_humidityNoise.SetFrequency(0.0005f);
+    m_humidityNoise.SetFractalType(FastNoiseLite::FractalType_FBm);
+    m_humidityNoise.SetFractalOctaves(4);
+    m_humidityNoise.SetFractalLacunarity(2.0f);
+    m_humidityNoise.SetFractalGain(0.5f);
+    m_humidityNoise.SetSeed(static_cast<int>(time(0)) + 2);
+
+
     m_noise.SetSeed(time(0));
     m_treeNoise.SetSeed(time(0));
+    m_chunks.reserve(Config::chunkRadius*Config::chunkRadius);
 }
+
 void World::loadChunk(int chunkPosX,int chunkPosZ) {
 
     glm::ivec2 chunkPos = glm::ivec2(chunkPosX,chunkPosZ);
@@ -32,7 +51,7 @@ void World::loadChunk(int chunkPosX,int chunkPosZ) {
     if(m_chunks.find(glm::ivec2(chunkPosX, chunkPosZ)) != m_chunks.end()) {
         return;
     }
-    ChunkColumn chunk(m_noise,m_treeNoise,chunkPosX,chunkPosZ,this);
+    ChunkColumn chunk(chunkPosX,chunkPosZ,this);
 
     ChunkColumn* chunkNx= getChunkColumn(chunkPosX - 1 ,chunkPosZ);
     ChunkColumn* chunkPx= getChunkColumn(chunkPosX + 1 ,chunkPosZ);
@@ -147,3 +166,16 @@ void World::setNeighbours() {
 
     }
 }
+float World::getHeightNoiseVal(int x, int y) const {
+    return m_noise.GetNoise(static_cast<float>(x), static_cast<float>(y)) + 1.0f;
+}
+float World::getTreeNoiseVal(int x,int y)const {
+    return m_treeNoise.GetNoise(static_cast<float>(x), static_cast<float>(y)) ;
+}
+float World::getHumidityNoiseVal(int x,int y) const {
+    return m_humidityNoise.GetNoise(static_cast<float>(x), static_cast<float>(y));
+}
+float World::getTemperatureNoiseVal(int x,int y) const {
+    return m_temperatureNoise.GetNoise(static_cast<float>(x), static_cast<float>(y)) ;
+}
+

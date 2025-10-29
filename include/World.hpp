@@ -28,10 +28,22 @@ public:
     void regenerateMeshes();
     void unloadFarChunks(int playerChunkX,int playerChunkZ);
     const ChunkMap& getChunks() const;
+
+    float getTemperatureNoiseVal(int x,int y)const;
+    float getHeightNoiseVal(int x,int y)const;
+
+    float getTreeNoiseVal(int x, int y) const;
+
+    float getHumidityNoiseVal(int x,int y)const;
+
     BlockType getBlockAt(glm::ivec3 worldPos);
 private:
     FastNoiseLite m_noise;
     FastNoiseLite m_treeNoise;
+
+    FastNoiseLite m_temperatureNoise;
+    FastNoiseLite m_humidityNoise;
+
 
     ChunkMap m_chunks;
     void setNeighbours();

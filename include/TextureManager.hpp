@@ -45,6 +45,37 @@ namespace TextureManager {
                 ty = 0;
                 tx = 7;
                 break;
+            case BlockType::Snow:
+                ty =0;
+                tx = 10;
+            break;
+            case BlockType::Spruce_Log:
+                if(fDir == FaceDirection::Top || fDir == FaceDirection::Bottom ) {
+                    tx = 11;
+                }
+                else {
+                    tx = 12;
+                }
+                ty = 0;
+
+                break;
+            case BlockType::Spruce_Leaves:
+                ty =0;
+                tx = 13;
+                break;
+            case BlockType::Cactus:
+                ty= 0;
+                if(fDir == FaceDirection::Top ) {
+                    tx = 15;
+
+                }
+                else if(fDir == FaceDirection::Bottom ) {
+                    tx = 14;
+                }
+                else {
+                    tx = 16;
+                }
+                break;
             default:
                 break;
         }
