@@ -67,7 +67,7 @@ void WorldGenerator::buildCactus(ChunkColumn *chunkColumn,int x_local,int y_star
     }
 }
 void WorldGenerator::buildSpruceTree(ChunkColumn *chunkColumn,int x_local,int y_start,int z_local) {
-    const int TRUNK_HEIGHT = 8;
+    const int TRUNK_HEIGHT = 16;
     //generate trunk
     for(int i=0;i<TRUNK_HEIGHT;i++) {
         int chunkY = (y_start+i)/Config::chunkSize;
@@ -80,7 +80,7 @@ BiomeType WorldGenerator::getBiomeType(float temperature,float humidity,int terr
 
     if (terrainHeight > SNOW_LINE) {
 
-        if (temperature < TEMP_HOT + 0.2f) { 
+        if (temperature < TEMP_HOT + 0.2f) {
             return BiomeType::Tundra;
         } else {
 
@@ -115,7 +115,7 @@ void WorldGenerator::spawnNature(ChunkColumn* chunkColumn, float noiseVal, int l
 
     const float PLAINS_TREE_THRESHOLD =8.0f;
     const float DESERT_CACTUS_THRESHOLD = 8.5f;
-    const float TUNDRA_TREE_THRESHOLD = 9.0f;
+    const float TUNDRA_TREE_THRESHOLD = 9.5f;
 
 
     if (terrainHeight <= Config::SEA_LEVEL) {
@@ -140,18 +140,18 @@ void WorldGenerator::spawnNature(ChunkColumn* chunkColumn, float noiseVal, int l
         case BiomeType::Plains:
 
             if (noiseVal > PLAINS_TREE_THRESHOLD && surfaceBlock == BlockType::Grass) {
-                WorldGenerator::buildOakTree(chunkColumn, localX, terrainHeight + 1, localZ);
+                buildOakTree(chunkColumn, localX, terrainHeight + 1, localZ);
             }
             break;
         case BiomeType::Desert:
 
             if (noiseVal > DESERT_CACTUS_THRESHOLD && surfaceBlock == BlockType::Sand) {
-                WorldGenerator::buildCactus(chunkColumn, localX, terrainHeight + 1, localZ);
+                buildCactus(chunkColumn, localX, terrainHeight + 1, localZ);
             }
             break;
         case BiomeType::Tundra:
-            if (noiseVal > DESERT_CACTUS_THRESHOLD && surfaceBlock == BlockType::Snow) {
-                WorldGenerator::buildSpruceTree(chunkColumn, localX, terrainHeight + 1, localZ);
+            if (noiseVal > TUNDRA_TREE_THRESHOLD && surfaceBlock == BlockType::Snow) {
+                buildSpruceTree(chunkColumn, localX, terrainHeight + 1, localZ);
             }
             break;
         default:
