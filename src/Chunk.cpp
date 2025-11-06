@@ -8,7 +8,7 @@
 #include <iostream>
 
 
-//bottom right //bottom left //top left
+//bottom right //bottom left //top left //top right
 constexpr std::array<std::array<glm::vec3, 6>, 6> faceVertices = {{
     // Front face (Z+)
     { glm::vec3(0.5f, -0.5f, 0.5f), glm::vec3(-0.5f, -0.5f, 0.5f), glm::vec3(-0.5f, 0.5f, 0.5f),
@@ -30,19 +30,69 @@ constexpr std::array<std::array<glm::vec3, 6>, 6> faceVertices = {{
       glm::vec3(0.5f, -0.5f, -0.5f), glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(-0.5f, -0.5f, 0.5f) }
 }};
 
-Chunk::Chunk(const int x,const int y,const int z,World* world):blocks{},
-    m_chunkPositionX(x),
-    m_chunkPositionY(y),
-    m_chunkPositionZ(z)
-{
-        m_world = world;
+//AO helpers
+struct AoOffsets {
+    glm::ivec3 side1;
+    glm::ivec3 side2;
+    glm::ivec3 corner;
+};
+enum Corner : int {
+    BOTTOM_RIGHT = 0,
+    BOTTOM_LEFT  = 1,
+    TOP_LEFT     = 2,
+    TOP_RIGHT    = 3
+};
+static constexpr std::array<std::array<AoOffsets, 4>, 6> aoLookupTable = {{
+    // Front (Z+)
+    {{
+        { glm::ivec3( 1, 0, 1), glm::ivec3( 0,-1, 1), glm::ivec3( 1,-1, 1) },  // BOTTOM_RIGHT
+        { glm::ivec3(-1, 0, 1), glm::ivec3( 0,-1, 1), glm::ivec3(-1,-1, 1) },  // BOTTOM_LEFT
+        { glm::ivec3(-1, 0, 1), glm::ivec3( 0, 1, 1), glm::ivec3(-1, 1, 1) },  // TOP_LEFT
+        { glm::ivec3( 1, 0, 1), glm::ivec3( 0, 1, 1), glm::ivec3( 1, 1, 1) }   // TOP_RIGHT
+    }},
+    // Back (Z-)
+    {{
+        { glm::ivec3( 1, 0,-1), glm::ivec3( 0,-1,-1), glm::ivec3( 1,-1,-1) },  // BOTTOM_RIGHT
+        { glm::ivec3(-1, 0,-1), glm::ivec3( 0,-1,-1), glm::ivec3(-1,-1,-1) },  // BOTTOM_LEFT
+        { glm::ivec3(-1, 0,-1), glm::ivec3( 0, 1,-1), glm::ivec3(-1, 1,-1) },  // TOP_LEFT
+        { glm::ivec3( 1, 0,-1), glm::ivec3( 0, 1,-1), glm::ivec3( 1, 1,-1) }   // TOP_RIGHT
+    }},
+    // Left (X-)
+    {{
+        { glm::ivec3(-1, 0, 1), glm::ivec3(-1,-1, 0), glm::ivec3(-1,-1, 1) },  // BOTTOM_RIGHT
+        { glm::ivec3(-1, 0,-1), glm::ivec3(-1,-1, 0), glm::ivec3(-1,-1,-1) },  // BOTTOM_LEFT
+        { glm::ivec3(-1, 0,-1), glm::ivec3(-1, 1, 0), glm::ivec3(-1, 1,-1) },  // TOP_LEFT
+        { glm::ivec3(-1, 0, 1), glm::ivec3(-1, 1, 0), glm::ivec3(-1, 1, 1) }   // TOP_RIGHT
+    }},
+    // Right (X+)
+    {{
+        { glm::ivec3( 1, 0, 1), glm::ivec3( 1,-1, 0), glm::ivec3( 1,-1, 1) },  // BOTTOM_RIGHT
+        { glm::ivec3( 1, 0,-1), glm::ivec3( 1,-1, 0), glm::ivec3( 1,-1,-1) },  // BOTTOM_LEFT
+        { glm::ivec3( 1, 0,-1), glm::ivec3( 1, 1, 0), glm::ivec3( 1, 1,-1) },  // TOP_LEFT
+        { glm::ivec3( 1, 0, 1), glm::ivec3( 1, 1, 0), glm::ivec3( 1, 1, 1) }   // TOP_RIGHT
+    }},
+    // Top (Y+)
+    {{
+        { glm::ivec3( 1, 1, 0), glm::ivec3( 0, 1, 1), glm::ivec3( 1, 1, 1) },  // BOTTOM_RIGHT
+        { glm::ivec3(-1, 1, 0), glm::ivec3( 0, 1, 1), glm::ivec3(-1, 1, 1) },  // BOTTOM_LEFT
+        { glm::ivec3(-1, 1, 0), glm::ivec3( 0, 1,-1), glm::ivec3(-1, 1,-1) },  // TOP_LEFT
+        { glm::ivec3( 1, 1, 0), glm::ivec3( 0, 1,-1), glm::ivec3( 1, 1,-1) }   // TOP_RIGHT
+    }},
+    // Bottom (Y-)
+    {{
+        { glm::ivec3(-1,-1, 0), glm::ivec3( 0,-1, 1), glm::ivec3(-1,-1, 1) },  // BOTTOM_RIGHT
+        { glm::ivec3( 1,-1, 0), glm::ivec3( 0,-1, 1), glm::ivec3( 1,-1, 1) },  // BOTTOM_LEFT
+        { glm::ivec3( 1,-1, 0), glm::ivec3( 0,-1,-1), glm::ivec3( 1,-1,-1) },  // TOP_LEFT
+        { glm::ivec3(-1,-1, 0), glm::ivec3( 0,-1,-1), glm::ivec3(-1,-1,-1) }   // TOP_RIGHT
+    }}
+}};
 
-        for(int i=0;i<Config::chunkSize;i++)
-            for(int j=0;j<Config::chunkSize;j++)
-                for(int k=0;k<Config::chunkSize;k++) {
 
-                    blocks[index(i,j,k)] = BlockType::Air;
-                }
+void Chunk::init(int x, int y, int z, World &world) {
+    m_chunkPositionX = x;
+    m_chunkPositionY = y;
+    m_chunkPositionZ = z;
+    m_world = &world;
 }
 
 
@@ -59,17 +109,16 @@ float Chunk::getBlockOcclusion(int x, int y, int z, Chunk* chunkNx, Chunk* chunk
     }
     // Block outside chunk but not corner/edge (check direct neighbors)
     else if ((x < 0 || x >= Config::chunkSize) + (y < 0 || y >= Config::chunkSize) + (z < 0 || z >= Config::chunkSize) == 1) {
-        if (x < 0)                blockType = chunkNx ? chunkNx->getBlock(Config::chunkSize + x, y, z) : BlockType::Air;
-        else if (x >= Config::chunkSize) blockType = chunkPx ? chunkPx->getBlock(x - Config::chunkSize, y, z) : BlockType::Air;
-        else if (y < 0)                blockType = chunkNy ? chunkNy->getBlock(x, Config::chunkSize + y, z) : BlockType::Air;
-        else if (y >= Config::chunkSize) blockType = chunkPy ? chunkPy->getBlock(x, y - Config::chunkSize, z) : BlockType::Air;
-        else if (z < 0)                blockType = chunkNz ? chunkNz->getBlock(x, y, Config::chunkSize + z) : BlockType::Air;
-        else /* (z >= Config::chunkSize)*/ blockType = chunkPz ? chunkPz->getBlock(x, y, z - Config::chunkSize) : BlockType::Air;
+        if (x < 0)                          blockType = chunkNx ? chunkNx->getBlock(Config::chunkSize + x, y, z) : BlockType::Air;
+        else if (x >= Config::chunkSize)    blockType = chunkPx ? chunkPx->getBlock(x - Config::chunkSize, y, z) : BlockType::Air;
+        else if (y < 0)                     blockType = chunkNy ? chunkNy->getBlock(x, Config::chunkSize + y, z) : BlockType::Air;
+        else if (y >= Config::chunkSize)    blockType = chunkPy ? chunkPy->getBlock(x, y - Config::chunkSize, z) : BlockType::Air;
+        else if (z < 0)                     blockType = chunkNz ? chunkNz->getBlock(x, y, Config::chunkSize + z) : BlockType::Air;
+        else if (z>= Config::chunkSize)     blockType = chunkPz ? chunkPz->getBlock(x, y, z - Config::chunkSize) : BlockType::Air;
     }
     // Block outside chunk on an edge or corner
     else {
         glm::vec3 globalPos = convertToWorldCoordinates(glm::vec3(x, y, z));
-
         blockType = m_world->getBlockAt(globalPos);
     }
 
@@ -106,194 +155,44 @@ inline uint8_t Chunk::calcAO(float side1, float side2, float corner)
 
 }
 u_int8_t Chunk::computeCornerAo(FaceDirection faceDir,int corner,int x,int y,int z,Chunk* chunkNx, Chunk* chunkPx, Chunk* chunkNy, Chunk* chunkPy, Chunk* chunkNz, Chunk* chunkPz) {
-    int d1x=0,d1y=0,d1z=0;
-    int d2x=0,d2y=0,d2z=0;
-    int d3x=0,d3y=0,d3z=0;
 
 
-    //bottom-right 0
-    //bottom-left 1
-    //top-left 2
-    //top-right 3
+    const auto& offsets = aoLookupTable[static_cast<int>(faceDir)][corner];
 
-    enum CornerDirection {
-        BOTTOM_RIGHT,
-        BOTTOM_LEFT,
-        TOP_LEFT,
-        TOP_RIGHT
-    };
+    float sideOneOcclusion = getBlockOcclusion(x + offsets.side1.x, y + offsets.side1.y, z + offsets.side1.z,
+                                               chunkNx, chunkPx, chunkNy, chunkPy, chunkNz, chunkPz);
 
-    switch (faceDir) {
-        case FaceDirection::Top:
-            switch (corner) {
-                case BOTTOM_RIGHT:
-                    d1x = 1, d1y = 1, d1z = 0;
-                    d2x = 0, d2y = 1, d2z = 1;
-                    d3x = 1, d3y = 1, d3z = 1;
-                break;
-                case BOTTOM_LEFT:
-                    d1x = -1, d1y = 1, d1z = 0;
-                    d2x = 0, d2y = 1, d2z = 1;
-                    d3x = -1, d3y = 1, d3z = 1;
-                break;
-                case TOP_LEFT:
-                    d1x = -1, d1y = 1, d1z = 0;
-                    d2x = 0, d2y = 1, d2z = -1;
-                    d3x = -1, d3y = 1, d3z = -1;
-                break;
-                case 3:
-                    d1x = 1, d1y = 1, d1z = 0;
-                    d2x = 0, d2y = 1, d2z = -1;
-                    d3x = 1, d3y = 1, d3z = -1;
-                break;
-            }
-            break;
-        case FaceDirection::Bottom:
-            switch (corner) {
-                case BOTTOM_RIGHT:
-                    d1x = -1, d1y = -1, d1z =  0;
-                d2x =  0, d2y = -1, d2z =  1;
-                d3x = -1, d3y = -1, d3z =  1;
-                break;
-                case BOTTOM_LEFT:
-                    d1x =  1, d1y = -1, d1z =  0;
-                d2x =  0, d2y = -1, d2z =  1;
-                d3x =  1, d3y = -1, d3z =  1;
-                break;
-                case TOP_LEFT:
-                    d1x =  1, d1y = -1, d1z =  0;
-                d2x =  0, d2y = -1, d2z = -1;
-                d3x =  1, d3y = -1, d3z = -1;
-                break;
-                case TOP_RIGHT:
-                    d1x = -1, d1y = -1, d1z =  0;
-                d2x =  0, d2y = -1, d2z = -1;
-                d3x = -1, d3y = -1, d3z = -1;
-                break;
-            }
-        break;
-        case FaceDirection::Front:
-            switch (corner) {
-                case BOTTOM_RIGHT:
-                    d1x = 1, d1y = 0, d1z = 1;
-                    d2x = 0, d2y = -1, d2z = 1;
-                    d3x = 1, d3y = -1, d3z = 1;
-                break;
-                case BOTTOM_LEFT:
-                    d1x = -1, d1y = 0, d1z = 1;
-                    d2x = 0, d2y = -1, d2z =  1;
-                    d3x = -1, d3y = -1, d3z = 1;
-                break;
-                case TOP_LEFT:
-                    d1x = -1, d1y = 0, d1z = 1;
-                    d2x = 0, d2y = 1, d2z = 1;
-                    d3x = -1, d3y = 1, d3z = 1;
-                break;
-                case TOP_RIGHT:
-                    d1x = 1, d1y = 0, d1z = 1;
-                    d2x = 0, d2y = 1, d2z = 1;
-                    d3x = 1, d3y = 1, d3z = 1;
-                break;
-            }
-        break;
-        case FaceDirection::Back:
-            switch (corner) {
-                case BOTTOM_RIGHT:
-                    d1x = 1, d1y = 0, d1z = -1;
-                    d2x = 0, d2y = -1, d2z = -1;
-                    d3x = 1, d3y = -1, d3z = -1;
-                break;
-                case BOTTOM_LEFT:
-                    d1x = -1, d1y = 0, d1z =  -1;
-                    d2x = 0, d2y = -1, d2z =  -1;
-                    d3x = -1, d3y = -1, d3z = -1;
-                break;
-                case TOP_LEFT:
-                    d1x = -1, d1y = 0, d1z = -1;
-                    d2x = 0, d2y = 1, d2z = -1;
-                    d3x = -1, d3y = 1, d3z = -1;
-                break;
-                case TOP_RIGHT:
-                    d1x = 1, d1y = 0, d1z = -1;
-                    d2x = 0, d2y = 1, d2z = -1;
-                    d3x = 1, d3y = 1, d3z = -1;
-                break;
-            }
-        break;
-        case FaceDirection::Right:
-            switch (corner) {
-                case BOTTOM_RIGHT:
-                    d1x = 1, d1y = 0, d1z = 1;
-                    d2x = 1, d2y = -1, d2z = 0;
-                    d3x = 1, d3y = -1, d3z = 1;
-                break;
-                case BOTTOM_LEFT:
-                    d1x = 1, d1y = 0, d1z =  -1;
-                    d2x = 1, d2y = -1, d2z =  0;
-                    d3x = 1, d3y = -1, d3z = -1;
-                break;
-                case TOP_LEFT:
-                    d1x = 1, d1y = 0, d1z = -1;
-                    d2x = 1, d2y = 1, d2z = 0;
-                    d3x = 1, d3y = 1, d3z = 1;
-                break;
-                case TOP_RIGHT:
-                    d1x = 1, d1y = 0, d1z = 1;
-                    d2x = 1, d2y = 1, d2z = 0;
-                    d3x = 1, d3y = 1, d3z = 1;
-                break;
-            }
-        break;
-        case FaceDirection::Left:
-            switch (corner) {
-                case BOTTOM_RIGHT:
-                    d1x = -1, d1y = 0, d1z = 1;
-                    d2x = -1, d2y = -1, d2z = 0;
-                    d3x = -1, d3y = -1, d3z = 1;
-                break;
-                case BOTTOM_LEFT:
-                    d1x = -1, d1y = 0, d1z =  -1;
-                    d2x = -1, d2y = -1, d2z =  0;
-                    d3x = -1, d3y = -1, d3z = -1;
-                break;
-                case TOP_LEFT:
-                    d1x = -1, d1y = 0, d1z = -1;
-                    d2x = -1, d2y = 1, d2z = 0;
-                    d3x = -1, d3y = 1, d3z = 1;
-                break;
-                case TOP_RIGHT:
-                    d1x = -1, d1y = 0, d1z = 1;
-                    d2x = -1, d2y = 1, d2z = 0;
-                    d3x = -1, d3y = 1, d3z = 1;
-                break;
-            }
-        break;
-        default:
-            break;
+    float sideTwoOcclusion = getBlockOcclusion(x + offsets.side2.x, y + offsets.side2.y, z + offsets.side2.z,
+                                               chunkNx, chunkPx, chunkNy, chunkPy, chunkNz, chunkPz);
+
+    // we greedy check sides if they both are fully ocluded
+    // we return minAO to prevent checking corner which is slow due to map searching
+    if (sideOneOcclusion > 0.9f && sideTwoOcclusion > 0.9f) {
+        return 60;
     }
 
-    float sideOneOcclusion = getBlockOcclusion(x + d1x, y + d1y, z + d1z,chunkNx, chunkPx, chunkNy, chunkPy, chunkNz, chunkPz);
-    float sideTwoOcclusion = getBlockOcclusion(x + d2x, y + d2y, z + d2z,chunkNx, chunkPx, chunkNy, chunkPy, chunkNz, chunkPz);
-    float cornerOcclusion= getBlockOcclusion(x + d3x, y + d3y, z + d3z,chunkNx, chunkPx, chunkNy, chunkPy, chunkNz, chunkPz);
+    float cornerOcclusion = getBlockOcclusion(x + offsets.corner.x, y + offsets.corner.y, z + offsets.corner.z,
+                                              chunkNx, chunkPx, chunkNy, chunkPy, chunkNz, chunkPz);
 
-    return calcAO(sideOneOcclusion,sideTwoOcclusion,cornerOcclusion);
+    return calcAO(sideOneOcclusion, sideTwoOcclusion, cornerOcclusion);
 
 }
 
-void Chunk::setBlock(BlockType block,int x,int y,int z) {
+void Chunk::setBlock(int x,int y,int z,BlockType block) {
     if(x<0 || y<0 || z<0 || x>Config::chunkSize || y>Config::chunkSize || z>Config::chunkSize) {
         std::cerr<<"Error in setBlock()"<<std::endl;
         return;
     }
 
+    if(block != BlockType::Air)m_isChunkEmpty = false;
 
     blocks[index(x,y,z)] = block;
 }
-BlockType Chunk::getBlock(int x, int y, int z) {
-    return (BlockType)blocks[index(x,y,z)];
+BlockType Chunk::getBlock(int x, int y, int z)const {
+    return blocks[index(x,y,z)];
 }
 
-inline glm::vec3 Chunk::convertToWorldCoordinates(const glm::vec3 &coordinates) {
+glm::vec3 Chunk::convertToWorldCoordinates(const glm::vec3 &coordinates)const {
     const glm::vec3 offsetVec = glm::vec3(
                    static_cast<float>(m_chunkPositionX) * Config::chunkSize ,
                    static_cast<float>(m_chunkPositionY) * Config::chunkSize ,
@@ -303,15 +202,14 @@ inline glm::vec3 Chunk::convertToWorldCoordinates(const glm::vec3 &coordinates) 
     return coordinates + offsetVec;
 
 }
-inline bool Chunk::isBlockTransparent(BlockType type) {
-    return type == BlockType::Air || type == BlockType::Water;
-}
+
+
 void Chunk::generateMesh(std::vector<Face>& solidMesh,std::vector<Face>&transparentMesh, Chunk* chunkNx, Chunk* chunkPx, Chunk* chunkNy, Chunk* chunkPy, Chunk* chunkNz, Chunk* chunkPz) {
-   for (int z = 0; z < Config::chunkSize; z++) {
+    for (int z = 0; z < Config::chunkSize; z++) {
         for (int y = 0; y < Config::chunkSize; y++) {
             for (int x = 0; x < Config::chunkSize; x++) {
 
-                BlockType currentBlockType = this->getBlock(x, y, z);
+                BlockType currentBlockType = getBlock(x, y, z);
                 if (currentBlockType == BlockType::Air) continue;
 
                 bool shouldRenderFace[6] = { false };
@@ -322,42 +220,42 @@ void Chunk::generateMesh(std::vector<Face>& solidMesh,std::vector<Face>&transpar
                 if (z + 1 == Config::chunkSize) {
                     neighborTypes[Front] = (chunkPz != nullptr) ? chunkPz->getBlock(x, y, 0) : BlockType::Air;
                 } else {
-                    neighborTypes[Front] = this->getBlock(x, y, z + 1);
+                    neighborTypes[Front] = getBlock(x, y, z + 1);
                 }
 
                 // Back (Z-)
                 if (z == 0) {
                     neighborTypes[Back] = (chunkNz != nullptr) ? chunkNz->getBlock(x, y, Config::chunkSize - 1) : BlockType::Air;
                 } else {
-                    neighborTypes[Back] = this->getBlock(x, y, z - 1);
+                    neighborTypes[Back] = getBlock(x, y, z - 1);
                 }
 
                 // Left (X-)
                 if (x == 0) {
                     neighborTypes[Left] = (chunkNx != nullptr) ? chunkNx->getBlock(Config::chunkSize - 1, y, z) : BlockType::Air;
                 } else {
-                    neighborTypes[Left] = this->getBlock(x - 1, y, z);
+                    neighborTypes[Left] = getBlock(x - 1, y, z);
                 }
 
                 // Right (X+)
                 if (x + 1 == Config::chunkSize) {
                     neighborTypes[Right] = (chunkPx != nullptr) ? chunkPx->getBlock(0, y, z) : BlockType::Air;
                 } else {
-                    neighborTypes[Right] = this->getBlock(x + 1, y, z);
+                    neighborTypes[Right] = getBlock(x + 1, y, z);
                 }
 
                 // Top (Y+)
                 if (y + 1 == Config::chunkSize) {
                     neighborTypes[Top] = (chunkPy != nullptr) ? chunkPy->getBlock(x, 0, z) : BlockType::Air;
                 } else {
-                    neighborTypes[Top] = this->getBlock(x, y + 1, z);
+                    neighborTypes[Top] = getBlock(x, y + 1, z);
                 }
 
                 // Bottom (Y-)
                 if (y == 0) {
                     neighborTypes[Bottom] = (chunkNy != nullptr) ? chunkNy->getBlock(x, Config::chunkSize - 1, z) : BlockType::Air;
                 } else {
-                    neighborTypes[Bottom] = this->getBlock(x, y - 1, z);
+                    neighborTypes[Bottom] = getBlock(x, y - 1, z);
                 }
 
 
@@ -387,7 +285,7 @@ void Chunk::generateMesh(std::vector<Face>& solidMesh,std::vector<Face>&transpar
                             int cornerID = triangleOrder[j];
                             glm::vec3 vertexPos = convertToWorldCoordinates(faceVertices[i][j] + glm::vec3(x, y, z));
                             face.vertices[j].position = vertexPos;
-                            face.vertices[j].ao = computeCornerAo((FaceDirection)i, cornerID, x, y, z,
+                            face.vertices[j].ao = computeCornerAo(static_cast<FaceDirection>(i), cornerID, x, y, z,
                                 chunkNx, chunkPx, chunkNy, chunkPy, chunkNz, chunkPz);
                         }
                         TextureManager::getTextureCoordinates(face.vertices, currentBlockType, (FaceDirection)i);

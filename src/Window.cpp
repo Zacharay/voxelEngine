@@ -6,16 +6,15 @@
 Window::Window() : m_window(nullptr) {
 
     if (!glfwInit()) {
-        std::cerr << "Failed to initialize GLFW" << std::endl;
-        exit(-1);
+        throw std::runtime_error("Failed to initialize GLFW3");
     }
 
 
     m_window = glfwCreateWindow(Config::windowWidth, Config::windowHeight, "OpenGL Window", nullptr, nullptr);
     if (!m_window) {
-        std::cerr << "Failed to create GLFW window" << std::endl;
+
         glfwTerminate();
-        exit(-1);
+        throw std::runtime_error("Failed to create GLFW window");
     }
 
 
@@ -23,8 +22,7 @@ Window::Window() : m_window(nullptr) {
 
 
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
-        std::cerr << "Failed to initialize GLAD" << std::endl;
-        exit(-1);
+        throw std::runtime_error("Failed to initialize GLAD");
     }
 
     glViewport(0, 0, Config::windowWidth, Config::windowHeight);
@@ -47,7 +45,7 @@ void Window::calculateFps() {
 
     if (elapsedTime >= 1.0) { // If a second has passed
         double fps = static_cast<double>(frameCount) / elapsedTime;
-        std::cout << "FPS: " << fps << std::endl;
+        std::cout << "FPS: " << fps << '\n';
 
         // Reset for the next calculation
         previousTime = currentTime;

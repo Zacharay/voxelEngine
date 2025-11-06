@@ -60,37 +60,37 @@ void Shader::checkCompilationError(unsigned int shader, std::string type)
         }
     }
     else
-    {
+
         glGetProgramiv(shader, GL_LINK_STATUS, &success);
         if (!success)
         {
             glGetProgramInfoLog(shader, 1024, NULL, infoLog);
             std::cout << "ERROR::PROGRAM_LINKING_ERROR of type: " << type << "\n" << infoLog << "\n -- --------------------------------------------------- -- " << std::endl;
         }
-    }
 }
-void Shader::useProgram()
+
+void Shader::useProgram()const
 {
     glUseProgram(this->ID);
 }
-void Shader::setMat4(glm::mat4 matrix, const char* uniformName)
+void Shader::setMat4(const glm::mat4 &matrix, const char* uniformName)const
 {
     int uniformLocation = glGetUniformLocation(this->ID, uniformName);
 
     glUniformMatrix4fv(uniformLocation, 1, GL_FALSE, glm::value_ptr(matrix));
 }
-void Shader::setVec3(glm::vec3 data, const char* uniformName)
+void Shader::setVec3(const glm::vec3 &data, const char* uniformName)const
 {
     int uniformLocation = glGetUniformLocation(this->ID, uniformName);
 
     glUniform3fv(uniformLocation, 1, &data[0]);
 }
 
-void Shader::setInt(int data, const char *uniformName) {
+void Shader::setInt(int data, const char *uniformName)const{
     int uniformLocation = glGetUniformLocation(this->ID, uniformName);
     glUniform1i(uniformLocation, data);
 }
-void Shader::setFloat(float data,const char *uniformName) {
+void Shader::setFloat(float data,const char *uniformName)const {
     int uniformLocation = glGetUniformLocation(this->ID, uniformName);
     glUniform1f(uniformLocation, data);
 }

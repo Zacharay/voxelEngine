@@ -1,3 +1,4 @@
+#pragma once
 #include "Camera.hpp"
 #include "Window.hpp"
 #include "World.hpp"

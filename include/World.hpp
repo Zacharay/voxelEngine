@@ -7,6 +7,7 @@
 #include "Chunk.hpp"
 #include "ChunkColumn.hpp"
 #include "glm/vec2.hpp"
+#include <climits>
 
 namespace std {
     template <>
@@ -44,6 +45,9 @@ private:
     FastNoiseLite m_temperatureNoise;
     FastNoiseLite m_humidityNoise;
 
+    //cache for getChunkColumn to prevent map searching  
+    ChunkColumn* m_lastAccessedColumn = nullptr;
+    glm::ivec2 m_lastAccessedPos = glm::ivec2(INT_MIN);
 
     ChunkMap m_chunks;
     void setNeighbours();

@@ -60,9 +60,10 @@ namespace WorldGenerator {
         return block;
 
     }
-    BiomeType getBiomeType(float temperature,float humidity,int terrainHeight);
-    void buildOakTree (ChunkColumn *chunkColumn,int x_local,int y_start,int z_local);
-    void buildSpruceTree(ChunkColumn *chunkColumn,int x_local,int y_start,int z_local);
-    void buildCactus(ChunkColumn *chunkColumn,int x_local,int y_start,int z_local);
-    void spawnNature(ChunkColumn *chunkColumn,float noiseVal,int localX,int terrainHeight,int localZ,BiomeType biome);
+    BiomeType getBiomeType( float temperature, float humidity, int terrainHeight);
+    void buildOakTree (ChunkColumn& chunkColumn,int localX,int yStart,int localZ);
+    void buildSpruceTree(ChunkColumn& chunkColumn,int localX,int yStart,int localZ);
+    void buildCactus(ChunkColumn& chunkColumn,int localX,int yStart,int localZ);
+
+    void spawnNature(ChunkColumn& chunkColumn,float noiseVal,int localX,int terrainHeight,int localZ,BiomeType biome);
 }

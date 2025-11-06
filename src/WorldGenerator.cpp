@@ -13,70 +13,68 @@ constexpr float HUMID_DRY = 1.0f;
 constexpr int MOUNTAIN_HEIGHT_START = 200; // Y-level where mountains begin to form
 constexpr int SNOW_LINE = 220;
 
-void WorldGenerator::buildOakTree(ChunkColumn *chunkColumn,int x_local,int y_start,int z_local){
+void WorldGenerator::buildOakTree(ChunkColumn& chunkColumn,int localX,int yStart,int localZ){
     const int TRUNK_HEIGHT = 5;
 
     //generate trunk
     for(int i=0;i<TRUNK_HEIGHT;i++) {
-        int chunkY = (y_start+i)/Config::chunkSize;
-        int y_local = (y_start+i)%Config::chunkSize;
-        chunkColumn->getChunk(chunkY)->setBlock(BlockType::OAK_LOG,x_local,y_local ,z_local);
+        chunkColumn.setBlockAt(localX,yStart+i,localZ,BlockType::OAK_LOG);
     }
 
     const int TREE_LEAVES_START_POSITION = 3;
 
-    for(int y=0;y<2;y++) {
-        int chunkY = (y_start+TREE_LEAVES_START_POSITION+y)/Config::chunkSize;
-        int y_local = (y_start+TREE_LEAVES_START_POSITION+y)%Config::chunkSize;
-        for(int x=x_local - 2 ; x<=x_local + 2 ; x++) {
-            for(int z=z_local - 2 ; z<=z_local + 2 ; z++) {
-                if(z==z_local && x==x_local)continue;
+    for(int i=0;i<2;i++) {
+        const int worldY = yStart+TREE_LEAVES_START_POSITION+i;
+        for(int x=localX - 2 ; x<=localX + 2 ; x++) {
+            for(int z=localZ - 2 ; z<=localZ + 2 ; z++) {
+                //skip trunk
+                if(z==localZ && x==localX)continue;
 
                 if(x>=0&&z>=0&&x<Config::chunkSize &&z<Config::chunkSize)
-                chunkColumn->getChunk(chunkY)->setBlock(BlockType::OAK_LEAVES,x,y_local,z);
+                chunkColumn.setBlockAt(x,worldY,z,BlockType::OAK_LEAVES);
             }
         }
     }
 
-    int chunkY = (y_start+TREE_LEAVES_START_POSITION+2)/Config::chunkSize;
-    int y_local = (y_start+TREE_LEAVES_START_POSITION+2)%Config::chunkSize;
-    for(int x=x_local - 1 ; x<=x_local + 1 ; x++) {
-        for(int z=z_local - 1 ; z<=z_local + 1 ; z++) {
-            if(x>=0&&z>=0&&x<Config::chunkSize &&z<Config::chunkSize)
-            chunkColumn->getChunk(chunkY)->setBlock(BlockType::OAK_LEAVES,x,y_local,z);
+
+    for(int x=localX - 1 ; x<=localX + 1 ; x++) {
+        for(int z=localZ - 1 ; z<=localZ + 1 ; z++) {
+            const int worldY = yStart+TREE_LEAVES_START_POSITION+2;
+            if(x>=0&&z>=0&&x<Config::chunkSize &&z<Config::chunkSize) {
+                chunkColumn.setBlockAt(x,worldY,z,BlockType::OAK_LEAVES);
+            }
         }
     }
 
     int directions[ ]= {-1,0,1};
-    chunkY = (y_start+TREE_LEAVES_START_POSITION+3)/Config::chunkSize;
-    y_local = (y_start+TREE_LEAVES_START_POSITION+3)%Config::chunkSize;
     for (int d :directions) {
-        if(x_local+d>=0&&z_local>=0&&x_local+d<Config::chunkSize &&z_local<Config::chunkSize)
-        chunkColumn->getChunk(chunkY)->setBlock(BlockType::OAK_LEAVES,x_local+d,y_local,z_local);
-        if(x_local>=0&&z_local+d>=0&&x_local<Config::chunkSize &&z_local+d<Config::chunkSize)
-        chunkColumn->getChunk(chunkY)->setBlock(BlockType::OAK_LEAVES,x_local,y_local,z_local+d);
+        const int worldY = yStart+TREE_LEAVES_START_POSITION+3;
+
+        if(localX+d>=0&&localZ>=0&&localX+d<Config::chunkSize &&localZ<Config::chunkSize) {
+            chunkColumn.setBlockAt(localX+d,worldY,localZ,BlockType::OAK_LEAVES);
+        }
+        if(localX>=0&&localZ+d>=0&&localX<Config::chunkSize &&localZ+d<Config::chunkSize) {
+            chunkColumn.setBlockAt(localX,worldY,localZ+d,BlockType::OAK_LEAVES);
+        }
+
     }
 }
-void WorldGenerator::buildCactus(ChunkColumn *chunkColumn,int x_local,int y_start,int z_local) {
+void WorldGenerator::buildCactus(ChunkColumn& chunkColumn,int localX,int yStart,int localZ) {
     const int CACTUS_HEIGHT = 4;
 
     for(int i=0;i<CACTUS_HEIGHT;i++) {
-        int chunkY = (y_start+i)/Config::chunkSize;
-        int y_local = (y_start+i)%Config::chunkSize;
-        chunkColumn->getChunk(chunkY)->setBlock(BlockType::Cactus,x_local,y_local ,z_local);
-    }
-}
-void WorldGenerator::buildSpruceTree(ChunkColumn *chunkColumn,int x_local,int y_start,int z_local) {
-    const int TRUNK_HEIGHT = 16;
-    //generate trunk
-    for(int i=0;i<TRUNK_HEIGHT;i++) {
-        int chunkY = (y_start+i)/Config::chunkSize;
-        int y_local = (y_start+i)%Config::chunkSize;
-        chunkColumn->getChunk(chunkY)->setBlock(BlockType::Spruce_Log,x_local,y_local ,z_local);
-    }
-}
-BiomeType WorldGenerator::getBiomeType(float temperature,float humidity,int terrainHeight) {
 
+        chunkColumn.setBlockAt(localX,yStart+i,localZ,BlockType::Cactus);
+    }
+}
+void WorldGenerator::buildSpruceTree(ChunkColumn& chunkColumn,int localX,int yStart,int localZ) {
+    const int TRUNK_HEIGHT = 16;
+
+    for(int i=0;i<TRUNK_HEIGHT;i++) {
+        chunkColumn.setBlockAt(localX,yStart+i,localZ,BlockType::Spruce_Log);
+    }
+}
+BiomeType WorldGenerator::getBiomeType(const float temperature,const float humidity,const int terrainHeight) {
 
     if (terrainHeight > SNOW_LINE) {
 
@@ -111,10 +109,10 @@ BiomeType WorldGenerator::getBiomeType(float temperature,float humidity,int terr
         return BiomeType::Plains;
     }
 }
-void WorldGenerator::spawnNature(ChunkColumn* chunkColumn, float noiseVal, int localX, int terrainHeight, int localZ, BiomeType biome) {
+void WorldGenerator::spawnNature(ChunkColumn& chunkColumn, float noiseVal, int localX, int terrainHeight, int localZ, BiomeType biome) {
 
     const float PLAINS_TREE_THRESHOLD =8.0f;
-    const float DESERT_CACTUS_THRESHOLD = 8.5f;
+    const float DESERT_CACTUS_THRESHOLD = 8.0f;
     const float TUNDRA_TREE_THRESHOLD = 9.5f;
 
 
@@ -122,19 +120,7 @@ void WorldGenerator::spawnNature(ChunkColumn* chunkColumn, float noiseVal, int l
         return;
     }
 
-
-    int surface_chunkY = terrainHeight / Config::chunkSize;
-    int surface_y_local = terrainHeight % Config::chunkSize;
-
-
-    if (surface_chunkY < 0 || surface_chunkY >= Config::chunkColumnHeight) {
-        std::cerr << "Warning: Invalid surface chunk index in spawnNature." << std::endl;
-        return;
-    }
-
-
-    BlockType surfaceBlock = chunkColumn->getChunk(surface_chunkY)->getBlock(localX, surface_y_local, localZ);
-
+    const BlockType surfaceBlock = chunkColumn.getBlockAt(localX,terrainHeight,localZ);
 
     switch (biome) {
         case BiomeType::Plains:

@@ -12,9 +12,10 @@ class Shader {
     void checkCompilationError(unsigned int shader, std::string type);
 public:
     Shader(const char* vertexSrc, const char* fragmentSrc);
-    void useProgram();
-    void setMat4(glm::mat4 matrix, const char* uniformName);
-    void setVec3(glm::vec3 data, const char* uniformName);
-    void setInt(int data, const char* uniformName);
-    void setFloat(float data,const char *uniformName);
+    void useProgram()const;
+
+    void setMat4(const glm::mat4 &matrix, const char* uniformName)const;
+    void setVec3(const glm::vec3 &data, const char* uniformName)const;
+    void setInt(int data, const char* uniformName)const;
+    void setFloat(float data,const char *uniformName)const;
 };

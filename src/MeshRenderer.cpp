@@ -56,8 +56,8 @@ void MeshRenderer::renderSolidChunks(const ChunkMap &chunks)const {
     for(auto &chunk : chunks) {
 
             chunk.second.bindSolidMesh();
-            glDrawArrays(GL_TRIANGLES, 0, chunk.second.m_solidMeshSize * 6 );
-            counter +=  chunk.second.m_solidMeshSize ;
+            glDrawArrays(GL_TRIANGLES, 0, chunk.second.getSolidMeshSize() * 6 );
+            counter +=  chunk.second.getSolidMeshSize() ;
 
 
     }
@@ -85,9 +85,9 @@ void MeshRenderer::renderTransparentChunks(const ChunkMap &chunks)const {
     glDepthMask(GL_FALSE);
 
     for(auto &chunk : chunks) {
-        if(!chunk.second.isMeshDirty) {
+        if(!chunk.second.isMeshDirty()) {
             chunk.second.bindTransparentMesh();
-            glDrawArrays(GL_TRIANGLES, 0, chunk.second.m_transparentMeshSize * 6 );
+            glDrawArrays(GL_TRIANGLES, 0, chunk.second.getTransparentMeshSize() * 6 );
 
         }
 

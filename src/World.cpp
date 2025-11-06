@@ -2,7 +2,7 @@
 #include "FastNoiseLite.h"
 #include <iostream>
 #include <Config.hpp>
-#include <cfloat>
+#include <WorldGenerator.hpp>
 
 
 World::World() {
@@ -51,7 +51,7 @@ void World::loadChunk(int chunkPosX,int chunkPosZ) {
     if(m_chunks.find(glm::ivec2(chunkPosX, chunkPosZ)) != m_chunks.end()) {
         return;
     }
-    ChunkColumn chunk(chunkPosX,chunkPosZ,this);
+    ChunkColumn chunk(chunkPosX,chunkPosZ,*this);
 
     ChunkColumn* chunkNx= getChunkColumn(chunkPosX - 1 ,chunkPosZ);
     ChunkColumn* chunkPx= getChunkColumn(chunkPosX + 1 ,chunkPosZ);
@@ -66,41 +66,34 @@ void World::loadChunk(int chunkPosX,int chunkPosZ) {
 
     if(chunkNx) {
         chunkNx->setNeighbourPx(chunkPtr);
-        chunkNx->isMeshDirty = true;
+        chunkNx->setMeshDirty(true);
     }
     if(chunkPx) {
         chunkPx->setNeighbourNx(chunkPtr);
-        chunkPx->isMeshDirty = true;
+        chunkPx->setMeshDirty(true);
     }
     if(chunkNz) {
         chunkNz->setNeighbourPz(chunkPtr);
-        chunkNz->isMeshDirty = true;
+        chunkNz->setMeshDirty(true);
     }
     if(chunkPz) {
         chunkPz->setNeighbourNz(chunkPtr);
-        chunkPz->isMeshDirty = true;
+        chunkPz->setMeshDirty(true);
     }
 
 
 }
-auto divFloor = [](int a, int b) {
-    int div = a / b;
-    int rem = a % b;
-    if (rem < 0) {
-        div -= 1;
-        rem += b;
-    }
-    return std::pair<int,int>(div, rem);
-};
 BlockType World::getBlockAt(glm::ivec3 pos) {
-    auto [chunkX, localX] = divFloor(pos.x, Config::chunkSize);
-    auto [chunkY, localY] = divFloor(pos.y, Config::chunkSize);
-    auto [chunkZ, localZ] = divFloor(pos.z, Config::chunkSize);
 
-    ChunkColumn* column = getChunkColumn(chunkX, chunkZ);
+    const int chunkXIndex = pos.x >> Config::chunkSizeShift;
+    const int chunkZIndex = pos.z >> Config::chunkSizeShift;
+    const int localX = pos.x & Config::chunkSizeMask;
+    const int localZ = pos.z  & Config::chunkSizeMask;
+
+    ChunkColumn* column = getChunkColumn(chunkXIndex, chunkZIndex);
     if (!column) return BlockType::Air;
 
-    return column->getBlockAt(chunkY, localX, localY, localZ);
+    return column->getBlockAt(localX, pos.y, localZ);
 
 }
 
@@ -138,7 +131,7 @@ void World::regenerateMeshes() {
         }
 
         ChunkColumn& chunkColumn = pair.second;
-        if(chunkColumn.isMeshDirty) {
+        if(chunkColumn.isMeshDirty()) {
             chunkColumn.generateMesh();
             chunkColumn.uploadToGpu();
             regenerated_count++;
@@ -149,11 +142,27 @@ const ChunkMap &World::getChunks()const {
     return m_chunks;
 }
 ChunkColumn* World::getChunkColumn(int chunkPosX,int chunkPosZ) {
-    auto chunkIt = m_chunks.find(glm::ivec2(chunkPosX,chunkPosZ));
-    if (chunkIt != m_chunks.end()) {
-        return &(chunkIt->second);
+    glm::ivec2 pos(chunkPosX, chunkPosZ);
+
+    // 1. SPRAWDŹ CACHE (Błyskawicznie szybkie)
+    //    Sprawdza, czy pytamy o tę samą kolumnę co ostatnio.
+    if (pos == m_lastAccessedPos) {
+        return m_lastAccessedColumn;
     }
 
+    // 2. CACHE MISS (Chybienie) - wykonaj powolne wyszukiwanie
+    auto chunkIt = m_chunks.find(pos);
+
+    // 3. ZAKTUALIZUJ CACHE I ZWRÓĆ WYNIK
+    if (chunkIt != m_chunks.end()) {
+        m_lastAccessedPos = pos;
+        m_lastAccessedColumn = &(chunkIt->second);
+        return m_lastAccessedColumn;
+    }
+
+    // 4. Nie znaleziono - zapisz w cache, że nie istnieje
+    m_lastAccessedPos = pos;
+    m_lastAccessedColumn = nullptr;
     return nullptr;
 }
 

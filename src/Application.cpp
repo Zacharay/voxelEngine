@@ -30,8 +30,8 @@ static void mouse_callback(GLFWwindow* window, double xPos,double yPos) {
 }
 
 Application::Application() : Window(){
-    world = std::unique_ptr<World>(new World());
-    meshRenderer = std::unique_ptr<MeshRenderer>(new MeshRenderer());
+    world = std::make_unique<World>();
+    meshRenderer = std::make_unique<MeshRenderer>();
 
     m_lastFrame = static_cast<float>(glfwGetTime());
 

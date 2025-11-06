@@ -1,8 +1,7 @@
 #pragma once
+
 #include <memory>
-#include <glm/vec3.hpp>
 #include <Shader.hpp>
-#include <vector>
 #include <World.hpp>
 
 
