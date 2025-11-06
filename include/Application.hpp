@@ -9,8 +9,8 @@ class Application : public Window{
     std::unique_ptr<MeshRenderer> meshRenderer;
 
 
-    float m_lastFrame ;
-    void processInput(float deltaTime);
+    double m_lastFrame ;
+    void processInput(double deltaTime);
 
 public:
     Application();

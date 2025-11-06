@@ -24,9 +24,10 @@ class Camera {
 public:
     Camera(glm::vec3 position, glm::vec3 front, glm::vec3 up);
 
-    void processKeyboardInput(Camera_Movement movement,float deltaTime);
+    void processKeyboardInput(Camera_Movement movement,double deltaTime);
     void processMouseInput(float xOffset, float yOffset);
-    glm::mat4 getViewMatrix()const;
-    glm::vec3 getPosition()const;
+
+    [[nodiscard]] glm::mat4 getViewMatrix()const;
+    [[nodiscard]] glm::vec3 getPosition()const;
 
 };

@@ -98,7 +98,7 @@ void Chunk::init(int x, int y, int z, World &world) {
 
 float Chunk::getBlockOcclusion(int x, int y, int z, Chunk* chunkNx, Chunk* chunkPx, Chunk* chunkNy, Chunk* chunkPy, Chunk* chunkNz, Chunk* chunkPz) {
 
-    BlockType blockType;
+    BlockType blockType = BlockType::Air;
 
     // Block inside this chunk
     if (x >= 0 && x < Config::chunkSize &&

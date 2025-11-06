@@ -38,7 +38,7 @@ Application::Application() : Window(){
     glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetCursorPosCallback(m_window, mouse_callback);
 }
-void Application::processInput(float deltaTime) {
+void Application::processInput(double deltaTime) {
 
     if(glfwGetKey(m_window, GLFW_KEY_W) == GLFW_PRESS) {
 
@@ -71,21 +71,24 @@ void Application::onRender() {
 
     meshRenderer->setViewMatrix(camera->getViewMatrix());
 
+    meshRenderer->renderSkybox();
+
     meshRenderer->renderSolidChunks(chunks);
     meshRenderer->renderTransparentChunks(chunks);
 
+
 }
 void Application::onUpdate() {
-    float currentFrame = glfwGetTime();
-    float deltaTime = currentFrame - m_lastFrame;
-    m_lastFrame = currentFrame;
+     const double currentFrame = glfwGetTime();
+     const double deltaTime = currentFrame - m_lastFrame;
+     m_lastFrame = currentFrame;
 
      processInput(deltaTime);
 
      glm::vec3 playerPos = camera->getPosition();
 
-     int playerChunkX = playerPos.x / Config::chunkSize;
-     int playerChunkZ = playerPos.z / Config::chunkSize;
+     int playerChunkX = static_cast<int>(playerPos.x) / static_cast<int>(Config::chunkSize);
+     int playerChunkZ = static_cast<int>(playerPos.z) / static_cast<int>(Config::chunkSize);
 
     for(int x = playerChunkX - Config::chunkRadius; x < playerChunkX + Config::chunkRadius; x++) {
         for( int z = playerChunkZ - Config::chunkRadius; z < playerChunkZ + Config::chunkRadius; z++) {
