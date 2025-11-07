@@ -21,6 +21,10 @@ ChunkColumn::ChunkColumn(int x,int z,World& world)
 
     const int  offsetX = m_posX * static_cast<int>(Config::chunkSize);
     const int  offsetZ = m_posZ * static_cast<int>(Config::chunkSize);
+
+    const int TERRAIN_BASE_HEIGHT = Config::SEA_LEVEL - 40; // Średni poziom gruntu
+    const int TERRAIN_AMPLITUDE = 100;
+
     for(int localX = 0; localX < Config::chunkSize; localX++) {
         for(int localZ = 0; localZ < Config::chunkSize; localZ++) {
             const int globalX = localX + offsetX;
@@ -31,7 +35,18 @@ ChunkColumn::ChunkColumn(int x,int z,World& world)
             const float temp = world.getTemperatureNoiseVal(globalX,globalZ);
             const float humidity = world.getHumidityNoiseVal(globalX,globalZ);
 
-            const int terrainHeight = static_cast<int>((heightNoiseVal / 2.0f) * Config::chunkMaxBlockHeight);
+
+            const float normalizedNoise = (heightNoiseVal) / 2.0f;
+
+
+            const int terrainHeight = static_cast<int>(TERRAIN_BASE_HEIGHT + (normalizedNoise * TERRAIN_AMPLITUDE));
+
+
+            // if(a) {
+            //     std::cout<<"terrainHeight: "<<terrainHeight<<'\n';
+            //     a = false;
+            // }
+
 
             BiomeType biome = WorldGenerator::getBiomeType(temp,humidity,terrainHeight);
 

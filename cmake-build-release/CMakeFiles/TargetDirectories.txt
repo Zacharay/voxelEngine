@@ -1,3 +1,0 @@
-/home/zachary/cppProjects/voxelEngine/cmake-build-release/CMakeFiles/voxelEngine.dir
-/home/zachary/cppProjects/voxelEngine/cmake-build-release/CMakeFiles/edit_cache.dir
-/home/zachary/cppProjects/voxelEngine/cmake-build-release/CMakeFiles/rebuild_cache.dir

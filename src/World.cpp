@@ -8,7 +8,7 @@
 World::World() {
 
     m_noise.SetNoiseType(FastNoiseLite::NoiseType_Perlin);
-    m_noise.SetFrequency(0.004f);
+    m_noise.SetFrequency(0.009f);
     m_noise.SetFractalType(FastNoiseLite::FractalType_FBm);
     m_noise.SetFractalOctaves(4);
     m_noise.SetFractalLacunarity(2.0f);

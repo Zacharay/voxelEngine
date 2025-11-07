@@ -34,6 +34,23 @@ add_executable(voxelEngine ${SOURCES}
         include/TextureManager.hpp
         src/WorldGenerator.cpp)
 
+add_custom_command(
+        TARGET voxelEngine POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/textures
+        $<TARGET_FILE_DIR:voxelEngine>/textures
+        COMMENT "Kopiowanie tekstur do folderu kompilacji"
+)
+
+add_custom_command(
+        TARGET voxelEngine POST_BUILD
+        COMMAND ${CMAKE_COMMAND} -E copy_directory
+        ${CMAKE_SOURCE_DIR}/shaders
+        $<TARGET_FILE_DIR:voxelEngine>/shaders
+        COMMENT "Kopiowanie shaderów do folderu kompilacji"
+)
+
+
 # Include directories
 include_directories(${OPENGL_INCLUDE_DIRS})
 include_directories(${CMAKE_SOURCE_DIR}/thirdParty)
