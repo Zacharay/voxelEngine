@@ -158,9 +158,9 @@ void MeshRenderer::renderSolidChunks(const ChunkMap &chunks)const {
     unsigned int faceCountCounter = 0;
     for(auto &chunk : chunks) {
 
-            chunk.second.bindSolidMesh();
-            glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(chunk.second.getSolidMeshSize()) * 6 );
-            faceCountCounter +=  chunk.second.getSolidMeshSize() ;
+            chunk.second->bindSolidMesh();
+            glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(chunk.second->getSolidMeshSize()) * 6 );
+            faceCountCounter +=  chunk.second->getSolidMeshSize() ;
 
 
     }
@@ -188,9 +188,9 @@ void MeshRenderer::renderTransparentChunks(const ChunkMap &chunks)const {
     glDepthMask(GL_FALSE);
 
     for(auto &chunk : chunks) {
-        if(!chunk.second.isMeshDirty()) {
-            chunk.second.bindTransparentMesh();
-            glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(chunk.second.getTransparentMeshSize()) * 6 );
+        if(!chunk.second->isMeshDirty()) {
+            chunk.second->bindTransparentMesh();
+            glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(chunk.second->getTransparentMeshSize()) * 6 );
         }
 
     }

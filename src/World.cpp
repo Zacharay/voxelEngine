@@ -51,15 +51,14 @@ void World::loadChunk(int chunkPosX,int chunkPosZ) {
     if(m_chunks.find(glm::ivec2(chunkPosX, chunkPosZ)) != m_chunks.end()) {
         return;
     }
-    ChunkColumn chunk(chunkPosX,chunkPosZ,*this);
 
     ChunkColumn* chunkNx= getChunkColumn(chunkPosX - 1 ,chunkPosZ);
     ChunkColumn* chunkPx= getChunkColumn(chunkPosX + 1 ,chunkPosZ);
     ChunkColumn* chunkNz= getChunkColumn(chunkPosX     ,chunkPosZ - 1);
     ChunkColumn* chunkPz= getChunkColumn(chunkPosX     ,chunkPosZ + 1);
 
-    auto [it, inserted] = m_chunks.emplace(chunkPos, std::move(chunk));
-    ChunkColumn* chunkPtr = &it->second;
+    auto [it, inserted] = m_chunks.emplace(chunkPos, std::make_unique<ChunkColumn>(chunkPosX,chunkPosZ,*this));
+    ChunkColumn* chunkPtr = it->second.get();
 
     chunkPtr->setNeighbouringChunks(chunkNx, chunkPx, chunkNz, chunkPz);
 
@@ -115,8 +114,8 @@ void World::unloadFarChunks(int playerChunkX,int playerChunkZ) {
         auto it = m_chunks.find(pos);
         if (it == m_chunks.end()) continue;
 
-        it->second.destroyGL();
-        it->second.disconnectNeighbours();
+        it->second->destroyGL();
+        it->second->disconnectNeighbours();
         m_chunks.erase(it);
     }
 }
@@ -130,10 +129,10 @@ void World::regenerateMeshes() {
             break;
         }
 
-        ChunkColumn& chunkColumn = pair.second;
-        if(chunkColumn.isMeshDirty()) {
-            chunkColumn.generateMesh();
-            chunkColumn.uploadToGpu();
+        std::unique_ptr<ChunkColumn>& chunkColumn = pair.second;
+        if(chunkColumn->isMeshDirty()) {
+            chunkColumn->generateMesh();
+            chunkColumn->uploadToGpu();
             regenerated_count++;
         }
     }
@@ -144,37 +143,25 @@ const ChunkMap &World::getChunks()const {
 ChunkColumn* World::getChunkColumn(int chunkPosX,int chunkPosZ) {
     glm::ivec2 pos(chunkPosX, chunkPosZ);
 
-    // 1. SPRAWDŹ CACHE (Błyskawicznie szybkie)
-    //    Sprawdza, czy pytamy o tę samą kolumnę co ostatnio.
+
     if (pos == m_lastAccessedPos) {
         return m_lastAccessedColumn;
     }
 
-    // 2. CACHE MISS (Chybienie) - wykonaj powolne wyszukiwanie
+
     auto chunkIt = m_chunks.find(pos);
 
-    // 3. ZAKTUALIZUJ CACHE I ZWRÓĆ WYNIK
     if (chunkIt != m_chunks.end()) {
         m_lastAccessedPos = pos;
-        m_lastAccessedColumn = &(chunkIt->second);
+        m_lastAccessedColumn = chunkIt->second.get();
         return m_lastAccessedColumn;
     }
 
-    // 4. Nie znaleziono - zapisz w cache, że nie istnieje
     m_lastAccessedPos = pos;
     m_lastAccessedColumn = nullptr;
     return nullptr;
 }
 
-void World::setNeighbours() {
-    for(auto& pair : m_chunks) {
-        glm::ivec2 pos = pair.first;
-        ChunkColumn& chunkColumn = pair.second;
-
-
-
-    }
-}
 float World::getHeightNoiseVal(int x, int y) const {
     return m_noise.GetNoise(static_cast<float>(x), static_cast<float>(y)) + 1.0f;
 }

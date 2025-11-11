@@ -41,13 +41,6 @@ ChunkColumn::ChunkColumn(int x,int z,World& world)
 
             const int terrainHeight = static_cast<int>(TERRAIN_BASE_HEIGHT + (normalizedNoise * TERRAIN_AMPLITUDE));
 
-
-            // if(a) {
-            //     std::cout<<"terrainHeight: "<<terrainHeight<<'\n';
-            //     a = false;
-            // }
-
-
             BiomeType biome = WorldGenerator::getBiomeType(temp,humidity,terrainHeight);
 
 

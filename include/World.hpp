@@ -20,7 +20,7 @@ namespace std {
     };
 }
 
-using ChunkMap = std::unordered_map<glm::ivec2, ChunkColumn>;
+using ChunkMap = std::unordered_map<glm::ivec2, std::unique_ptr<ChunkColumn>>;
 
 class World {
 public:
@@ -50,7 +50,6 @@ private:
     glm::ivec2 m_lastAccessedPos = glm::ivec2(INT_MIN);
 
     ChunkMap m_chunks;
-    void setNeighbours();
     ChunkColumn* getChunkColumn(int chunkPosX,int chunkPosZ);
 
 };
