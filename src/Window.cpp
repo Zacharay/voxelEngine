@@ -1,7 +1,7 @@
 #include "Window.hpp"
 #include <iostream>
 #include "Config.hpp"
-
+#include <fstream>
 // Constructor
 Window::Window() : m_window(nullptr) {
 
@@ -38,6 +38,14 @@ Window::~Window() {
     }
     glfwTerminate();
 }
+void Window::log(const std::string& message) {
+    std::ofstream logFile("voxelEngine.log", std::ios::app); // open in append mode
+    if (logFile.is_open()) {
+        logFile << message << std::endl;
+        logFile.flush();
+    }
+}
+
 
 void Window::calculateFps() {
     double currentTime = glfwGetTime();
@@ -46,7 +54,9 @@ void Window::calculateFps() {
 
     if (elapsedTime >= 1.0) { // If a second has passed
         double fps = static_cast<double>(frameCount) / elapsedTime;
-        std::cout << "FPS: " << fps << '\n';
+        log("FPS: " + std::to_string(fps) + '\n');
+
+
 
         // Reset for the next calculation
         previousTime = currentTime;

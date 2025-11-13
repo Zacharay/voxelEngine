@@ -2,7 +2,8 @@
 
 #include <vector>
 #include "Chunk.hpp"
-
+#include <mutex>
+#include <atomic>
 
 class World;
 struct Face;
@@ -14,6 +15,14 @@ public:
     ChunkColumn(int x, int z, World& world);
     ~ChunkColumn();
 
+
+    // Step 2: Add synchronization tools
+    std::mutex m_meshDataMutex; // Protects m_solidMesh and m_transparentMesh
+
+    // Step 3: Add atomic state flags
+    std::atomic<bool> m_isMeshDirty{true};       // Set to true when blocks change
+    std::atomic<bool> m_isGeneratingMesh{false}; // True if in thread pool
+    std::atomic<bool> m_meshReadyForUpload{false};
 
     void generateMesh();
     void disconnectNeighbours();
@@ -57,7 +66,9 @@ public:
     [[nodiscard]] unsigned int getTransparentMeshSize() const { return m_transparentMeshSize; }
 
 
-    void setMeshDirty(bool dirty) { m_isMeshDirty = dirty; }
+    void setMeshDirty(bool dirty) {
+        m_isMeshDirty = dirty;
+    }
     void setGpuMeshReady(bool ready) { m_gpuMeshReady = ready; }
     void setCpuMeshReady(bool ready) { m_cpuMeshReady = ready; }
 
@@ -78,8 +89,6 @@ private:
     ChunkColumn* m_nbrChunkColumnPX = nullptr;
     ChunkColumn* m_nbrChunkColumnPZ = nullptr;
 
-    // FLAGS
-    bool m_isMeshDirty = true;
     bool m_cpuMeshReady = false;
     bool m_gpuMeshReady = false;
 

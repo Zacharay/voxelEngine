@@ -22,7 +22,7 @@ ChunkColumn::ChunkColumn(int x,int z,World& world)
     const int  offsetX = m_posX * static_cast<int>(Config::chunkSize);
     const int  offsetZ = m_posZ * static_cast<int>(Config::chunkSize);
 
-    const int TERRAIN_BASE_HEIGHT = Config::SEA_LEVEL - 40; // Średni poziom gruntu
+    const int TERRAIN_BASE_HEIGHT = Config::SEA_LEVEL - 40;
     const int TERRAIN_AMPLITUDE = 100;
 
     for(int localX = 0; localX < Config::chunkSize; localX++) {
@@ -40,6 +40,7 @@ ChunkColumn::ChunkColumn(int x,int z,World& world)
 
 
             const int terrainHeight = static_cast<int>(TERRAIN_BASE_HEIGHT + (normalizedNoise * TERRAIN_AMPLITUDE));
+
 
             BiomeType biome = WorldGenerator::getBiomeType(temp,humidity,terrainHeight);
 
@@ -115,9 +116,8 @@ void ChunkColumn::setBlockAt(int localX, int worldY, int localZ,BlockType block)
 
 void ChunkColumn::generateMesh() {
 
-    resetMeshesContainers();
-    destroyGL();
-
+    std::vector<Face> tempSolidMesh;
+    std::vector<Face> tempTransparentMesh;
     for(int i=0;i<Config::chunkSize;i++) {
         Chunk &chunk = m_chunks[i];
         if(chunk.isChunkEmpty())continue;
@@ -133,8 +133,8 @@ void ChunkColumn::generateMesh() {
         Chunk *chunkPz = m_nbrChunkColumnPZ != nullptr ? m_nbrChunkColumnPZ->getChunk(i) : nullptr;
 
         chunk.generateMesh(
-            m_solidMesh,
-            m_transparentMesh,
+            tempSolidMesh,
+            tempTransparentMesh,
             chunkNx,
             chunkPx,
             chunkNy,
@@ -145,15 +145,27 @@ void ChunkColumn::generateMesh() {
 
     }
 
+    // Now, lock the mutex to safely swap the generated data
+    {
+        std::lock_guard<std::mutex> lock(m_meshDataMutex);
+        m_solidMesh = std::move(tempSolidMesh);
+        m_transparentMesh = std::move(tempTransparentMesh);
+    }
 
+
+    m_meshReadyForUpload = true;
+    m_isGeneratingMesh = false;
     m_isMeshDirty = false;
-    m_cpuMeshReady = true;
 }
 void ChunkColumn::uploadToGpu() {
+
+    destroyGL();
+
+    std::lock_guard<std::mutex> lock(m_meshDataMutex);
+
     glGenVertexArrays(1, &m_solidVAO);
     glGenBuffers(1, &m_solidVBO);
     glBindVertexArray(m_solidVAO);
-
 
     glBindBuffer(GL_ARRAY_BUFFER, m_solidVBO);
     glBufferData(GL_ARRAY_BUFFER, m_solidMesh.size() * sizeof(Face), m_solidMesh.data(), GL_STATIC_DRAW);
@@ -190,7 +202,7 @@ void ChunkColumn::uploadToGpu() {
      m_transparentMesh.clear();
      m_transparentMesh.shrink_to_fit();
 
-    m_gpuMeshReady = true;
+    m_meshReadyForUpload = false;
 }
 
 void ChunkColumn::setNeighbouringChunks(ChunkColumn* chunkNx,ChunkColumn* chunkPx,ChunkColumn* chunkNz,ChunkColumn* chunkPz) {

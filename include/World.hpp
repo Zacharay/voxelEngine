@@ -9,6 +9,8 @@
 #include "glm/vec2.hpp"
 #include <climits>
 
+#include "ThreadPool.hpp"
+
 namespace std {
     template <>
     struct hash<glm::ivec2> {
@@ -36,9 +38,11 @@ public:
     float getTreeNoiseVal(int x, int y) const;
 
     float getHumidityNoiseVal(int x,int y)const;
-
+    void processChunkMeshes();
     BlockType getBlockAt(glm::ivec3 worldPos);
 private:
+    std::unique_ptr<ThreadPool> m_threadPool;
+
     FastNoiseLite m_noise;
     FastNoiseLite m_treeNoise;
 
@@ -49,7 +53,10 @@ private:
     ChunkColumn* m_lastAccessedColumn = nullptr;
     glm::ivec2 m_lastAccessedPos = glm::ivec2(INT_MIN);
 
+    std::mutex m_chunkMapMutex;
+
     ChunkMap m_chunks;
+    void setNeighbours();
     ChunkColumn* getChunkColumn(int chunkPosX,int chunkPosZ);
 
 };

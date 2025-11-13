@@ -30,10 +30,9 @@ namespace Config {
 
     constexpr int chunkSizeShift = detail::compileTimeLog2(chunkSize);
     constexpr int chunkSizeMask = chunkSize - 1;
-
     constexpr int chunkRadius = 32;
 
-    constexpr int SEA_LEVEL = 60;
+    constexpr int SEA_LEVEL = 61;
     constexpr int chunkMaxBlockHeight = chunkSize * chunkColumnHeight;
 
     inline bool showFaceCount = false;

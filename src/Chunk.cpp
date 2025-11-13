@@ -118,8 +118,8 @@ float Chunk::getBlockOcclusion(int x, int y, int z, Chunk* chunkNx, Chunk* chunk
     }
     // Block outside chunk on an edge or corner
     else {
-        glm::vec3 globalPos = convertToWorldCoordinates(glm::vec3(x, y, z));
-        blockType = m_world->getBlockAt(globalPos);
+       // glm::vec3 globalPos = convertToWorldCoordinates(glm::vec3(x, y, z));
+        //blockType = m_world->getBlockAt(globalPos);
     }
 
 

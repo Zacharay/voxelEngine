@@ -41,6 +41,11 @@ World::World() {
 
     m_noise.SetSeed(time(0));
     m_treeNoise.SetSeed(time(0));
+
+
+    unsigned int numThreads = std::max(1u, std::thread::hardware_concurrency() - 1);
+    m_threadPool = std::make_unique<ThreadPool>(numThreads);
+
     m_chunks.reserve(Config::chunkRadius*Config::chunkRadius);
 }
 
@@ -51,6 +56,7 @@ void World::loadChunk(int chunkPosX,int chunkPosZ) {
     if(m_chunks.find(glm::ivec2(chunkPosX, chunkPosZ)) != m_chunks.end()) {
         return;
     }
+
 
     ChunkColumn* chunkNx= getChunkColumn(chunkPosX - 1 ,chunkPosZ);
     ChunkColumn* chunkPx= getChunkColumn(chunkPosX + 1 ,chunkPosZ);
@@ -96,10 +102,49 @@ BlockType World::getBlockAt(glm::ivec3 pos) {
 
 }
 
+void World::processChunkMeshes() {
+
+    const int MAX_UPLOADS_PER_FRAME = 256;
+    int uploadedCount = 0;
+
+
+    std::lock_guard<std::mutex> lock(m_chunkMapMutex);
+
+    for (auto& pair : m_chunks) {
+        if (uploadedCount >= MAX_UPLOADS_PER_FRAME) break;
+
+        std::unique_ptr<ChunkColumn>& column = pair.second;
+        if (column->m_meshReadyForUpload) {
+            column->uploadToGpu();
+            uploadedCount++;
+        }
+    }
+
+    for (auto& pair : m_chunks) {
+        std::unique_ptr<ChunkColumn>& column = pair.second;
+
+
+        if (column->m_isMeshDirty && !column->m_isGeneratingMesh && !column->m_meshReadyForUpload) {
+
+
+            column->m_isGeneratingMesh = true;
+
+
+            ChunkColumn* columnPtr = column.get();
+
+            m_threadPool->enqueue([columnPtr]() {
+                columnPtr->generateMesh();
+            });
+        }
+    }
+}
+
 void World::unloadFarChunks(int playerChunkX,int playerChunkZ) {
     const int unloadRadius = static_cast<int>(Config::chunkRadius) + 1;
     std::vector<glm::ivec2> toRemove;
     toRemove.reserve(32);
+
+    std::lock_guard<std::mutex> lock(m_chunkMapMutex);
 
     for (auto &p : m_chunks) {
         const glm::ivec2 pos = p.first;
@@ -114,40 +159,26 @@ void World::unloadFarChunks(int playerChunkX,int playerChunkZ) {
         auto it = m_chunks.find(pos);
         if (it == m_chunks.end()) continue;
 
+
+        if (it->second->m_isGeneratingMesh) {
+            continue;
+        }
+
         it->second->destroyGL();
         it->second->disconnectNeighbours();
         m_chunks.erase(it);
     }
 }
-void World::regenerateMeshes() {
 
-    int meshes_per_frame = 32;
-    int regenerated_count = 0;
-
-    for(auto& pair : m_chunks) {
-        if (regenerated_count >= meshes_per_frame) {
-            break;
-        }
-
-        std::unique_ptr<ChunkColumn>& chunkColumn = pair.second;
-        if(chunkColumn->isMeshDirty()) {
-            chunkColumn->generateMesh();
-            chunkColumn->uploadToGpu();
-            regenerated_count++;
-        }
-    }
-}
 const ChunkMap &World::getChunks()const {
     return m_chunks;
 }
 ChunkColumn* World::getChunkColumn(int chunkPosX,int chunkPosZ) {
     glm::ivec2 pos(chunkPosX, chunkPosZ);
 
-
     if (pos == m_lastAccessedPos) {
         return m_lastAccessedColumn;
     }
-
 
     auto chunkIt = m_chunks.find(pos);
 
@@ -174,4 +205,3 @@ float World::getHumidityNoiseVal(int x,int y) const {
 float World::getTemperatureNoiseVal(int x,int y) const {
     return m_temperatureNoise.GetNoise(static_cast<float>(x), static_cast<float>(y)) ;
 }
-

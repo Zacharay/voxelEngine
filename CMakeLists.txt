@@ -32,7 +32,8 @@ add_executable(voxelEngine ${SOURCES}
         include/Timer.hpp
         include/WorldGenerator.hpp
         include/TextureManager.hpp
-        src/WorldGenerator.cpp)
+        src/WorldGenerator.cpp
+        include/ThreadPool.hpp)
 
 add_custom_command(
         TARGET voxelEngine POST_BUILD

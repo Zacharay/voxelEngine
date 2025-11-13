@@ -90,13 +90,18 @@ void Application::onUpdate() {
      int playerChunkX = static_cast<int>(playerPos.x) / static_cast<int>(Config::chunkSize);
      int playerChunkZ = static_cast<int>(playerPos.z) / static_cast<int>(Config::chunkSize);
 
-    for(int x = playerChunkX - Config::chunkRadius; x < playerChunkX + Config::chunkRadius; x++) {
-        for( int z = playerChunkZ - Config::chunkRadius; z < playerChunkZ + Config::chunkRadius; z++) {
-            world->loadChunk(x,z);
+    try {
+        for (int x = playerChunkX - Config::chunkRadius; x < playerChunkX + Config::chunkRadius; x++) {
+            for (int z = playerChunkZ - Config::chunkRadius; z < playerChunkZ + Config::chunkRadius; z++) {
+                //std::cout << "Loading chunk: " << x << ", " << z << std::endl;
+                world->loadChunk(x, z);
+            }
         }
+
+        world->unloadFarChunks(playerChunkX, playerChunkZ);
+        world->processChunkMeshes();
+    } catch (const std::exception &e) {
+        std::cerr << "Exception during update: " << e.what() << std::endl;
+        glfwSetWindowShouldClose(m_window, true);
     }
-
-    world->unloadFarChunks(playerChunkX,playerChunkZ);
-
-    world->regenerateMeshes();
 }
