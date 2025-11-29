@@ -1,12 +1,17 @@
 #pragma once
 
 #include <vector>
-#include "Chunk.hpp"
 #include <mutex>
 #include <atomic>
+#include "Config.hpp"
+#include <array>
+#include "BlockTypes.hpp"
+#include "Chunk.hpp"
 
 class World;
 struct Face;
+
+
 
 class ChunkColumn {
 
@@ -67,9 +72,6 @@ public:
     int m_posX;
     int m_posZ;
 private:
-
-
-
 
     World& m_world;
 

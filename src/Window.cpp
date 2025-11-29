@@ -3,12 +3,10 @@
 #include "Config.hpp"
 #include <fstream>
 
-
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_glfw.h"
 #include "imgui/imgui_impl_opengl3.h"
 
-// Constructor
 Window::Window() : m_window(nullptr) {
 
     if (!glfwInit()) {

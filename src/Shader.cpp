@@ -39,11 +39,11 @@ Shader::Shader(const char* vertexPath, const char* fragmentPath)
     glShaderSource(fragmentShader, 1, &fragmentCode, NULL);
     glCompileShader(fragmentShader);
     this->checkCompilationError(fragmentShader, "FRAGMENT");
-    this->ID = glCreateProgram();
+    this->m_id = glCreateProgram();
 
-    glAttachShader(this->ID, vertexShader);
-    glAttachShader(this->ID, fragmentShader);
-    glLinkProgram(this->ID);
+    glAttachShader(this->m_id, vertexShader);
+    glAttachShader(this->m_id, fragmentShader);
+    glLinkProgram(this->m_id);
 
 }
 void Shader::checkCompilationError(unsigned int shader, std::string type)
@@ -71,26 +71,26 @@ void Shader::checkCompilationError(unsigned int shader, std::string type)
 
 void Shader::useProgram()const
 {
-    glUseProgram(this->ID);
+    glUseProgram(this->m_id);
 }
 void Shader::setMat4(const glm::mat4 &matrix, const char* uniformName)const
 {
-    int uniformLocation = glGetUniformLocation(this->ID, uniformName);
+    int uniformLocation = glGetUniformLocation(this->m_id, uniformName);
 
     glUniformMatrix4fv(uniformLocation, 1, GL_FALSE, glm::value_ptr(matrix));
 }
 void Shader::setVec3(const glm::vec3 &data, const char* uniformName)const
 {
-    int uniformLocation = glGetUniformLocation(this->ID, uniformName);
+    int uniformLocation = glGetUniformLocation(this->m_id, uniformName);
 
     glUniform3fv(uniformLocation, 1, &data[0]);
 }
 
 void Shader::setInt(int data, const char *uniformName)const{
-    int uniformLocation = glGetUniformLocation(this->ID, uniformName);
+    int uniformLocation = glGetUniformLocation(this->m_id, uniformName);
     glUniform1i(uniformLocation, data);
 }
 void Shader::setFloat(float data,const char *uniformName)const {
-    int uniformLocation = glGetUniformLocation(this->ID, uniformName);
+    int uniformLocation = glGetUniformLocation(this->m_id, uniformName);
     glUniform1f(uniformLocation, data);
 }

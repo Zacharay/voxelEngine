@@ -1,27 +1,11 @@
 #pragma once
 
-#include <glm/vec3.hpp>
 
 #include "Config.hpp"
+#include "BlockTypes.hpp"
 class ChunkColumn;
 
-// Define block types
-enum class BlockType :unsigned char{
-    Air,
-    Water,
-    Grass,
-    Sand,
-    Stone,
-    Dirt,
-    OAK_LOG,
-    OAK_LEAVES,
-    OAK_PLANKS,
-    Spruce_Log,
-    Spruce_Leaves,
-    Cactus,
-    Snow,
-    BlockTypeCount
-};
+
 enum class BiomeType :unsigned char{
     Ocean,      // Below sea level
     Plains,     // Default moderate temp, lower elevation

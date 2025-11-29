@@ -5,7 +5,7 @@
 
 
 namespace TextureManager {
-    void getTexturePosition(int &tx,int &ty,BlockType bType,FaceDirection fDir) {
+    inline void getTexturePosition(int &tx,int &ty,BlockType bType,FaceDirection fDir) {
         switch (bType) {
             case BlockType::Grass:
                 ty= 0;

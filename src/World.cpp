@@ -54,8 +54,10 @@ World::World() {
 void World::loadChunk(int chunkPosX,int chunkPosZ) {
 
     glm::ivec2 chunkPos = glm::ivec2(chunkPosX,chunkPosZ);
-    //chunk already exists
-    if(m_chunks.find(glm::ivec2(chunkPosX, chunkPosZ)) != m_chunks.end()) {
+
+    const bool chunkAlreadyExists = m_chunks.find(chunkPos) != m_chunks.end();
+
+    if(chunkAlreadyExists) {
         return;
     }
 
@@ -191,7 +193,7 @@ RaycastResult World::rayCast(const glm::vec3 &origin, const glm::vec3 &direction
             result.blockType = blockID;
             return result;
         }
-        
+
         if (tMaxX < tMaxY) {
             if (tMaxX < tMaxZ) {
                 x += stepX;

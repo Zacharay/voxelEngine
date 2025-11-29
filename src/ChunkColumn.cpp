@@ -66,8 +66,8 @@ void ChunkColumn::generateTerrain() {
     const int  offsetX = m_posX * static_cast<int>(Config::chunkSize);
     const int  offsetZ = m_posZ * static_cast<int>(Config::chunkSize);
 
-    const int TERRAIN_BASE_HEIGHT = Config::SEA_LEVEL - 40;
-    const int TERRAIN_AMPLITUDE = 100;
+    constexpr int TERRAIN_BASE_HEIGHT = Config::SEA_LEVEL - 40;
+    constexpr int TERRAIN_AMPLITUDE = 100;
 
     for(int localX = 0; localX < Config::chunkSize; localX++) {
         for(int localZ = 0; localZ < Config::chunkSize; localZ++) {
@@ -121,32 +121,22 @@ void ChunkColumn::generateMesh() {
 
     tempSolidMesh.reserve(Config::chunkSize * Config::chunkSize * Config::chunkSize);
     tempTransparentMesh.reserve(Config::chunkSize * Config::chunkSize);
+
     for(int i=0;i<Config::chunkSize;i++) {
 
         Chunk &chunk = m_chunks[i];
         if(chunk.isChunkEmpty())continue;
 
+        ChunkNeighbors neighbors;
 
-        Chunk *chunkNy = i>0 ? &m_chunks[i-1]:nullptr;
-        Chunk *chunkPy = i<Config::chunkSize -1 ? &m_chunks[i+1]:nullptr;
+        neighbors.bottom = i>0 ? &m_chunks[i-1]:nullptr;
+        neighbors.top    = i<Config::chunkSize -1 ? &m_chunks[i+1]:nullptr;
+        neighbors.left   = m_nbrChunkColumnNX != nullptr ? m_nbrChunkColumnNX->getChunk(i) : nullptr;
+        neighbors.right  = m_nbrChunkColumnPX != nullptr ? m_nbrChunkColumnPX->getChunk(i) : nullptr;
+        neighbors.back   = m_nbrChunkColumnNZ != nullptr ? m_nbrChunkColumnNZ->getChunk(i) : nullptr;
+        neighbors.front  = m_nbrChunkColumnPZ != nullptr ? m_nbrChunkColumnPZ->getChunk(i) : nullptr;
 
-
-        Chunk *chunkNx = m_nbrChunkColumnNX != nullptr ? m_nbrChunkColumnNX->getChunk(i) : nullptr;
-        Chunk *chunkPx = m_nbrChunkColumnPX != nullptr ? m_nbrChunkColumnPX->getChunk(i) : nullptr;
-        Chunk *chunkNz = m_nbrChunkColumnNZ != nullptr ? m_nbrChunkColumnNZ->getChunk(i) : nullptr;
-        Chunk *chunkPz = m_nbrChunkColumnPZ != nullptr ? m_nbrChunkColumnPZ->getChunk(i) : nullptr;
-
-        chunk.generateMesh(
-            tempSolidMesh,
-            tempTransparentMesh,
-            chunkNx,
-            chunkPx,
-            chunkNy,
-            chunkPy,
-            chunkNz,
-            chunkPz
-            );
-
+        chunk.generateMesh(tempSolidMesh,tempTransparentMesh,neighbors);
     }
 
     // now lock the mutex to safely swap the generated data
@@ -175,7 +165,7 @@ void ChunkColumn::uploadToGpu() {
 
     glEnableVertexAttribArray(0);
 
-    glVertexAttribIPointer(0, 1, GL_UNSIGNED_INT, sizeof(Vertex), (void*)offsetof(Vertex, packedData));
+    glVertexAttribIPointer(0, 1, GL_UNSIGNED_INT, 4, nullptr);
 
 
 
@@ -194,7 +184,7 @@ void ChunkColumn::uploadToGpu() {
 
 
     glEnableVertexAttribArray(0);
-    glVertexAttribIPointer(0, 1, GL_UNSIGNED_INT, sizeof(Vertex), (void*)offsetof(Vertex, packedData));
+    glVertexAttribIPointer(0, 1, GL_UNSIGNED_INT, 4, nullptr);
 
 
 

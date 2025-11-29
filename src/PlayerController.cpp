@@ -14,7 +14,6 @@ void PlayerController::update(float deltaTime,GLFWwindow* window,World &world) {
 
     m_mouseInteractionTimer -= deltaTime;
 
-
     handleMovement(window,deltaTime);
     handleMouseInteraction(window,world);
     handleInventory(window,world);

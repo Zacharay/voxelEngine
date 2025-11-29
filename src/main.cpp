@@ -1,7 +1,7 @@
 
 #include "Application.hpp"
 #include  "Window.hpp"
-#include <stdexcept>
+
 #include <iostream>
 
 
@@ -16,5 +16,5 @@ int main(){
         return EXIT_FAILURE;
     }
     return EXIT_SUCCESS;
-    return 0;
+
 }

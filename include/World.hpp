@@ -6,6 +6,7 @@
 #include <vector>
 #include "Chunk.hpp"
 #include "ChunkColumn.hpp"
+#include "glm/vec3.hpp"
 #include "glm/vec2.hpp"
 #include <climits>
 
@@ -25,10 +26,10 @@ namespace std {
 using ChunkMap = std::unordered_map<glm::ivec2, std::unique_ptr<ChunkColumn>>;
 
 struct RaycastResult {
-    bool hit;               // Czy trafiliśmy w blok?
-    glm::ivec3 blockPos;    // Pozycja trafionego bloku (do niszczenia)
-    glm::ivec3 faceNormal;  // Wektor normalny ściany (do stawiania bloku obok)
-    BlockType blockType;    // Typ trafionego bloku
+    bool hit;
+    glm::ivec3 blockPos;
+    glm::ivec3 faceNormal;
+    BlockType blockType;
 };
 
 class World {

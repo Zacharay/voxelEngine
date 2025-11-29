@@ -1,14 +1,13 @@
 #include "WorldGenerator.hpp"
 
 #include <World.hpp>
-#include <iostream>
 #include "Config.hpp"
 
 
 constexpr float TEMP_COLD = -0.4f; // Below this is potentially Tundra
 constexpr float TEMP_HOT = 0.4f;   // Above this is potentially Desert
 constexpr float HUMID_DRY = 1.0f;
-// Between COLD and HOT is Temperate
+
 
 constexpr int MOUNTAIN_HEIGHT_START = 200; // Y-level where mountains begin to form
 constexpr int SNOW_LINE = 220;

@@ -7,95 +7,83 @@
 #include "World.hpp"
 #include <iostream>
 
-// winding order
-//bottom right //bottom left //top left //top right
-constexpr std::array<std::array<glm::ivec3, 6>, 6> faceVertices = {{
-    // Front face (Z+) -> Z=1
-    { glm::ivec3(1, 0, 1), glm::ivec3(0, 0, 1), glm::ivec3(0, 1, 1),
-      glm::ivec3(0, 1, 1), glm::ivec3(1, 1, 1), glm::ivec3(1, 0, 1) },
+namespace {
 
-    // Back face (Z-) -> Z=0
-    { glm::ivec3(1, 0, 0), glm::ivec3(0, 0, 0), glm::ivec3(0, 1, 0),
-      glm::ivec3(0, 1, 0), glm::ivec3(1, 1, 0), glm::ivec3(1, 0, 0) },
+    using namespace glm;
 
-    // Left face (X-) -> X=0
-    { glm::ivec3(0, 0, 1), glm::ivec3(0, 0, 0), glm::ivec3(0, 1, 0),
-      glm::ivec3(0, 1, 0), glm::ivec3(0, 1, 1), glm::ivec3(0, 0, 1) },
+    // Bottom-Right, Bottom-Left, Top-Left, Top-Right
+    constexpr std::array<std::array<ivec3, 6>, 6> FACE_VERTICES = {{
+        // Front (Z+)
+        { ivec3(1, 0, 1), ivec3(0, 0, 1), ivec3(0, 1, 1), ivec3(0, 1, 1), ivec3(1, 1, 1), ivec3(1, 0, 1) },
+        // Back (Z-)
+        { ivec3(1, 0, 0), ivec3(0, 0, 0), ivec3(0, 1, 0), ivec3(0, 1, 0), ivec3(1, 1, 0), ivec3(1, 0, 0) },
+        // Left (X-)
+        { ivec3(0, 0, 1), ivec3(0, 0, 0), ivec3(0, 1, 0), ivec3(0, 1, 0), ivec3(0, 1, 1), ivec3(0, 0, 1) },
+        // Right (X+)
+        { ivec3(1, 0, 1), ivec3(1, 0, 0), ivec3(1, 1, 0), ivec3(1, 1, 0), ivec3(1, 1, 1), ivec3(1, 0, 1) },
+        // Top (Y+)
+        { ivec3(1, 1, 1), ivec3(0, 1, 1), ivec3(0, 1, 0), ivec3(0, 1, 0), ivec3(1, 1, 0), ivec3(1, 1, 1) },
+        // Bottom (Y-)
+        { ivec3(0, 0, 1), ivec3(1, 0, 1), ivec3(1, 0, 0), ivec3(1, 0, 0), ivec3(0, 0, 0), ivec3(0, 0, 1) }
+    }};
 
-    // Right face (X+) -> X=1
-    { glm::ivec3(1, 0, 1), glm::ivec3(1, 0, 0), glm::ivec3(1, 1, 0),
-      glm::ivec3(1, 1, 0), glm::ivec3(1, 1, 1), glm::ivec3(1, 0, 1) },
+    struct AoOffsets {
+        ivec3 side1, side2, corner;
+    };
 
-    // Top face (Y+) -> Y=1
-    { glm::ivec3(1, 1, 1), glm::ivec3(0, 1, 1), glm::ivec3(0, 1, 0),
-      glm::ivec3(0, 1, 0), glm::ivec3(1, 1, 0), glm::ivec3(1, 1, 1) },
+    constexpr std::array<std::array<AoOffsets, 4>, 6> AO_LOOKUP_TABLE = {{
+        // Front (Z+)
+        {{
+            { ivec3( 1, 0, 1), ivec3( 0,-1, 1), ivec3( 1,-1, 1) },
+            { ivec3(-1, 0, 1), ivec3( 0,-1, 1), ivec3(-1,-1, 1) },
+            { ivec3(-1, 0, 1), ivec3( 0, 1, 1), ivec3(-1, 1, 1) },
+            { ivec3( 1, 0, 1), ivec3( 0, 1, 1), ivec3( 1, 1, 1) }
+        }},
+        // Back (Z-)
+        {{
+            { ivec3( 1, 0,-1), ivec3( 0,-1,-1), ivec3( 1,-1,-1) },
+            { ivec3(-1, 0,-1), ivec3( 0,-1,-1), ivec3(-1,-1,-1) },
+            { ivec3(-1, 0,-1), ivec3( 0, 1,-1), ivec3(-1, 1,-1) },
+            { ivec3( 1, 0,-1), ivec3( 0, 1,-1), ivec3( 1, 1,-1) }
+        }},
+        // Left (X-)
+        {{
+            { ivec3(-1, 0, 1), ivec3(-1,-1, 0), ivec3(-1,-1, 1) },
+            { ivec3(-1, 0,-1), ivec3(-1,-1, 0), ivec3(-1,-1,-1) },
+            { ivec3(-1, 0,-1), ivec3(-1, 1, 0), ivec3(-1, 1,-1) },
+            { ivec3(-1, 0, 1), ivec3(-1, 1, 0), ivec3(-1, 1, 1) }
+        }},
+        // Right (X+)
+        {{
+            { ivec3( 1, 0, 1), ivec3( 1,-1, 0), ivec3( 1,-1, 1) },
+            { ivec3( 1, 0,-1), ivec3( 1,-1, 0), ivec3( 1,-1,-1) },
+            { ivec3( 1, 0,-1), ivec3( 1, 1, 0), ivec3( 1, 1,-1) },
+            { ivec3( 1, 0, 1), ivec3( 1, 1, 0), ivec3( 1, 1, 1) }
+        }},
+        // Top (Y+)
+        {{
+            { ivec3( 1, 1, 0), ivec3( 0, 1, 1), ivec3( 1, 1, 1) },
+            { ivec3(-1, 1, 0), ivec3( 0, 1, 1), ivec3(-1, 1, 1) },
+            { ivec3(-1, 1, 0), ivec3( 0, 1,-1), ivec3(-1, 1,-1) },
+            { ivec3( 1, 1, 0), ivec3( 0, 1,-1), ivec3( 1, 1,-1) }
+        }},
+        // Bottom (Y-)
+        {{
+            { ivec3(-1,-1, 0), ivec3( 0,-1, 1), ivec3(-1,-1, 1) },
+            { ivec3( 1,-1, 0), ivec3( 0,-1, 1), ivec3( 1,-1, 1) },
+            { ivec3( 1,-1, 0), ivec3( 0,-1,-1), ivec3( 1,-1,-1) },
+            { ivec3(-1,-1, 0), ivec3( 0,-1,-1), ivec3(-1,-1,-1) }
+        }}
+    }};
 
-    // Bottom face (Y-) -> Y=0
-    { glm::ivec3(0, 0, 1), glm::ivec3(1, 0, 1), glm::ivec3(1, 0, 0),
-      glm::ivec3(1, 0, 0), glm::ivec3(0, 0, 0), glm::ivec3(0, 0, 1) }
-}};
+    [[nodiscard]] inline bool shouldRenderFace(BlockType current, BlockType neighbor) {
+        if (current == BlockType::Water) {
+            return neighbor == BlockType::Air;
+        }
+        return BlockUtils::isTransparent(neighbor);
+    }
 
-///                     zzzz xxxx yyyy yyyy
-/// 0000 0000 0000 0000 0000 0000 0000 0000
-///
-
-//AO helpers
-struct AoOffsets {
-    glm::ivec3 side1;
-    glm::ivec3 side2;
-    glm::ivec3 corner;
-};
-enum Corner : int {
-    BOTTOM_RIGHT = 0,
-    BOTTOM_LEFT  = 1,
-    TOP_LEFT     = 2,
-    TOP_RIGHT    = 3
-};
-static constexpr std::array<std::array<AoOffsets, 4>, 6> aoLookupTable = {{
-    // Front (Z+)
-    {{
-        { glm::ivec3( 1, 0, 1), glm::ivec3( 0,-1, 1), glm::ivec3( 1,-1, 1) },  // BOTTOM_RIGHT
-        { glm::ivec3(-1, 0, 1), glm::ivec3( 0,-1, 1), glm::ivec3(-1,-1, 1) },  // BOTTOM_LEFT
-        { glm::ivec3(-1, 0, 1), glm::ivec3( 0, 1, 1), glm::ivec3(-1, 1, 1) },  // TOP_LEFT
-        { glm::ivec3( 1, 0, 1), glm::ivec3( 0, 1, 1), glm::ivec3( 1, 1, 1) }   // TOP_RIGHT
-    }},
-    // Back (Z-)
-    {{
-        { glm::ivec3( 1, 0,-1), glm::ivec3( 0,-1,-1), glm::ivec3( 1,-1,-1) },  // BOTTOM_RIGHT
-        { glm::ivec3(-1, 0,-1), glm::ivec3( 0,-1,-1), glm::ivec3(-1,-1,-1) },  // BOTTOM_LEFT
-        { glm::ivec3(-1, 0,-1), glm::ivec3( 0, 1,-1), glm::ivec3(-1, 1,-1) },  // TOP_LEFT
-        { glm::ivec3( 1, 0,-1), glm::ivec3( 0, 1,-1), glm::ivec3( 1, 1,-1) }   // TOP_RIGHT
-    }},
-    // Left (X-)
-    {{
-        { glm::ivec3(-1, 0, 1), glm::ivec3(-1,-1, 0), glm::ivec3(-1,-1, 1) },  // BOTTOM_RIGHT
-        { glm::ivec3(-1, 0,-1), glm::ivec3(-1,-1, 0), glm::ivec3(-1,-1,-1) },  // BOTTOM_LEFT
-        { glm::ivec3(-1, 0,-1), glm::ivec3(-1, 1, 0), glm::ivec3(-1, 1,-1) },  // TOP_LEFT
-        { glm::ivec3(-1, 0, 1), glm::ivec3(-1, 1, 0), glm::ivec3(-1, 1, 1) }   // TOP_RIGHT
-    }},
-    // Right (X+)
-    {{
-        { glm::ivec3( 1, 0, 1), glm::ivec3( 1,-1, 0), glm::ivec3( 1,-1, 1) },  // BOTTOM_RIGHT
-        { glm::ivec3( 1, 0,-1), glm::ivec3( 1,-1, 0), glm::ivec3( 1,-1,-1) },  // BOTTOM_LEFT
-        { glm::ivec3( 1, 0,-1), glm::ivec3( 1, 1, 0), glm::ivec3( 1, 1,-1) },  // TOP_LEFT
-        { glm::ivec3( 1, 0, 1), glm::ivec3( 1, 1, 0), glm::ivec3( 1, 1, 1) }   // TOP_RIGHT
-    }},
-    // Top (Y+)
-    {{
-        { glm::ivec3( 1, 1, 0), glm::ivec3( 0, 1, 1), glm::ivec3( 1, 1, 1) },  // BOTTOM_RIGHT
-        { glm::ivec3(-1, 1, 0), glm::ivec3( 0, 1, 1), glm::ivec3(-1, 1, 1) },  // BOTTOM_LEFT
-        { glm::ivec3(-1, 1, 0), glm::ivec3( 0, 1,-1), glm::ivec3(-1, 1,-1) },  // TOP_LEFT
-        { glm::ivec3( 1, 1, 0), glm::ivec3( 0, 1,-1), glm::ivec3( 1, 1,-1) }   // TOP_RIGHT
-    }},
-    // Bottom (Y-)
-    {{
-        { glm::ivec3(-1,-1, 0), glm::ivec3( 0,-1, 1), glm::ivec3(-1,-1, 1) },  // BOTTOM_RIGHT
-        { glm::ivec3( 1,-1, 0), glm::ivec3( 0,-1, 1), glm::ivec3( 1,-1, 1) },  // BOTTOM_LEFT
-        { glm::ivec3( 1,-1, 0), glm::ivec3( 0,-1,-1), glm::ivec3( 1,-1,-1) },  // TOP_LEFT
-        { glm::ivec3(-1,-1, 0), glm::ivec3( 0,-1,-1), glm::ivec3(-1,-1,-1) }   // TOP_RIGHT
-    }}
-}};
-
+}
 
 void Chunk::init(int x, int y, int z, World &world) {
     m_chunkPositionX = x;
@@ -103,11 +91,44 @@ void Chunk::init(int x, int y, int z, World &world) {
     m_chunkPositionZ = z;
     m_world = &world;
 }
+inline void Chunk::addFaceGeometry(int i, int x, int y, int z, BlockType currentBlock,
+                                   const ChunkNeighbors& chunkNeighbors,
+                                   std::vector<Face>& solidMesh,
+                                   std::vector<Face>& transparentMesh) const {
 
+    //Bottom-Right 0
+    //Bottom-Left 1
+    //Top-Left 2
+    //Top-Right 3
+    constexpr int triangleOrder[] = {0, 1, 2, 2, 3, 0};
+    Face face;
 
-inline uint8_t Chunk::calcAO(float side1, float side2, float corner)
+    for (int j = 0; j < 6; j++) {
+        int cornerID = triangleOrder[j];
+
+        int localX = static_cast<int>(FACE_VERTICES[i][j].x) + x;
+        int localY = static_cast<int>(FACE_VERTICES[i][j].y) + y;
+        int localZ = static_cast<int>(FACE_VERTICES[i][j].z) + z;
+
+        int worldY = localY + m_chunkPositionY * Config::chunkSize;
+
+        int texX, texY;
+        TextureManager::getTexturePosition(texX, texY, currentBlock, (FaceDirection)i);
+
+        const u_int8_t aoLevel = computeCornerAo(static_cast<FaceDirection>(i), cornerID, x, y, z, chunkNeighbors);
+
+        face.vertices[j] = getPackedVertexData(localX, worldY, localZ, texX, texY, aoLevel);
+    }
+
+    if (currentBlock == BlockType::Water) {
+        transparentMesh.push_back(face);
+    } else {
+        solidMesh.push_back(face);
+    }
+}
+
+inline uint8_t Chunk::calcAO(float side1, float side2, float corner)const
 {
-
     if (side1 > 0.9f && side2 > 0.9f) {
         return 0;
     }
@@ -128,8 +149,7 @@ inline uint8_t Chunk::calcAO(float side1, float side2, float corner)
 }
 
 
-float Chunk::getBlockOcclusion(int x, int y, int z, Chunk* chunkNx, Chunk* chunkPx, Chunk* chunkNy, Chunk* chunkPy, Chunk* chunkNz, Chunk* chunkPz) {
-
+float Chunk::getBlockOcclusion(int x, int y, int z, const ChunkNeighbors& chunkNeigbors)const {
     BlockType blockType = BlockType::Air;
 
     if (x >= 0 && x < Config::chunkSize &&
@@ -140,39 +160,34 @@ float Chunk::getBlockOcclusion(int x, int y, int z, Chunk* chunkNx, Chunk* chunk
     }
 
     else if ((x < 0 || x >= Config::chunkSize) + (y < 0 || y >= Config::chunkSize) + (z < 0 || z >= Config::chunkSize) == 1) {
-        if (x < 0)                          blockType = chunkNx ? chunkNx->getBlock(Config::chunkSize + x, y, z) : BlockType::Air;
-        else if (x >= Config::chunkSize)    blockType = chunkPx ? chunkPx->getBlock(x - Config::chunkSize, y, z) : BlockType::Air;
-        else if (y < 0)                     blockType = chunkNy ? chunkNy->getBlock(x, Config::chunkSize + y, z) : BlockType::Air;
-        else if (y >= Config::chunkSize)    blockType = chunkPy ? chunkPy->getBlock(x, y - Config::chunkSize, z) : BlockType::Air;
-        else if (z < 0)                     blockType = chunkNz ? chunkNz->getBlock(x, y, Config::chunkSize + z) : BlockType::Air;
-        else if (z >= Config::chunkSize)    blockType = chunkPz ? chunkPz->getBlock(x, y, z - Config::chunkSize) : BlockType::Air;
+        if (x < 0)                          blockType = chunkNeigbors.left ? chunkNeigbors.left ->getBlock(Config::chunkSize + x, y, z) : BlockType::Air;
+        else if (x >= Config::chunkSize)    blockType = chunkNeigbors.right  ? chunkNeigbors.right ->getBlock(x - Config::chunkSize, y, z) : BlockType::Air;
+        else if (y < 0)                     blockType = chunkNeigbors.bottom ? chunkNeigbors.bottom->getBlock(x, Config::chunkSize + y, z) : BlockType::Air;
+        else if (y >= Config::chunkSize)    blockType = chunkNeigbors.top ? chunkNeigbors.top->getBlock(x, y - Config::chunkSize, z) : BlockType::Air;
+        else if (z < 0)                     blockType = chunkNeigbors.back ? chunkNeigbors.back->getBlock(x, y, Config::chunkSize + z) : BlockType::Air;
+        else if (z >= Config::chunkSize)    blockType = chunkNeigbors.front ? chunkNeigbors.front->getBlock(x, y, z - Config::chunkSize) : BlockType::Air;
     }
     else {
         blockType = BlockType::Air;
     }
 
-    if (blockType == BlockType::Air) {
-        return 0.0f;
-    } else if (blockType == BlockType::Water) {
-        return 0.4f;
-    } else {
-        return 1.0f;
-    }
+    if (blockType == BlockType::Air) return 0.0f;
+    if (blockType == BlockType::Water)return 0.4f;
+
+    return 1.0f;
+
 }
-u_int8_t Chunk::computeCornerAo(FaceDirection faceDir,int corner,int x,int y,int z,Chunk* chunkNx, Chunk* chunkPx, Chunk* chunkNy, Chunk* chunkPy, Chunk* chunkNz, Chunk* chunkPz) {
+u_int8_t Chunk::computeCornerAo(FaceDirection faceDir,int corner,int x,int y,int z,const ChunkNeighbors& chunkNeighbors)const {
 
 
-    const auto& offsets = aoLookupTable[static_cast<int>(faceDir)][corner];
+    const auto& offsets = AO_LOOKUP_TABLE[static_cast<int>(faceDir)][corner];
 
-    float sideOneOcclusion = getBlockOcclusion(x + offsets.side1.x, y + offsets.side1.y, z + offsets.side1.z,
-                                               chunkNx, chunkPx, chunkNy, chunkPy, chunkNz, chunkPz);
+    float sideOneOcclusion = getBlockOcclusion(x + offsets.side1.x, y + offsets.side1.y, z + offsets.side1.z,chunkNeighbors);
 
-    float sideTwoOcclusion = getBlockOcclusion(x + offsets.side2.x, y + offsets.side2.y, z + offsets.side2.z,
-                                               chunkNx, chunkPx, chunkNy, chunkPy, chunkNz, chunkPz);
+    float sideTwoOcclusion = getBlockOcclusion(x + offsets.side2.x, y + offsets.side2.y, z + offsets.side2.z,chunkNeighbors);
 
 
-    float cornerOcclusion = getBlockOcclusion(x + offsets.corner.x, y + offsets.corner.y, z + offsets.corner.z,
-                                              chunkNx, chunkPx, chunkNy, chunkPy, chunkNz, chunkPz);
+    float cornerOcclusion = getBlockOcclusion(x + offsets.corner.x, y + offsets.corner.y, z + offsets.corner.z,chunkNeighbors);
 
     return calcAO(sideOneOcclusion, sideTwoOcclusion, cornerOcclusion);
 
@@ -191,139 +206,84 @@ void Chunk::setBlock(int x,int y,int z,BlockType block) {
 BlockType Chunk::getBlock(int x, int y, int z)const {
     return blocks[index(x,y,z)];
 }
-u_int32_t Chunk::getPackedVertexData(const int posX,const int posY,const int posZ,const int texX,const int texY,const u_int8_t aO) {
-    // 4. PACKING (32 bits total)
-    std::uint32_t packedData = 0;
 
-    // Y: 9 bits [0-8]
-    packedData |= (posY & 0x1FF);
+void Chunk::generateMesh(std::vector<Face>& solidMesh,std::vector<Face>&transparentMesh, const ChunkNeighbors& chunkNeighbors)const {
+    for (int z = 1; z < Config::chunkSize-1; z++) {
+        for (int y = 1; y < Config::chunkSize-1; y++) {
+            for (int x = 1; x < Config::chunkSize-1; x++) {
 
-    // X: 5 bits [9-13]
-    packedData |= (posX & 0x1F) << 9;
+                BlockType currentBlock = getBlock(x, y, z);
+                if (currentBlock == BlockType::Air) [[likely]]continue;
 
-    // Z: 5 bits [14-18]
-    packedData |= (posZ & 0x1F) << 14;
-
-    // Texture X: 5 bits [19-23]
-    packedData |= (texX & 0x1F) << 19;
-
-    // Texture Y: 5 bits [24-28]
-    packedData |= (texY & 0x1F) << 24;
-
-    // AO: 3 bits [29-31]
-    packedData |= (aO & 0x7) << 29;
-
-    return packedData;
-
-}
-
-void Chunk::generateMesh(std::vector<Face>& solidMesh,std::vector<Face>&transparentMesh, Chunk* chunkNx, Chunk* chunkPx, Chunk* chunkNy, Chunk* chunkPy, Chunk* chunkNz, Chunk* chunkPz) {
-    for (int z = 0; z < Config::chunkSize; z++) {
-        for (int y = 0; y < Config::chunkSize; y++) {
-            for (int x = 0; x < Config::chunkSize; x++) {
-
-                BlockType currentBlockType = getBlock(x, y, z);
-                if (currentBlockType == BlockType::Air) continue;
-
-                bool shouldRenderFace[6] = { false };
-                BlockType neighborTypes[6];
-
-
-                // Front (Z+)
-                if (z + 1 == Config::chunkSize) {
-                    neighborTypes[Front] = (chunkPz != nullptr) ? chunkPz->getBlock(x, y, 0) : BlockType::Air;
-                } else {
-                    neighborTypes[Front] = getBlock(x, y, z + 1);
-                }
-
-                // Back (Z-)
-                if (z == 0) {
-                    neighborTypes[Back] = (chunkNz != nullptr) ? chunkNz->getBlock(x, y, Config::chunkSize - 1) : BlockType::Air;
-                } else {
-                    neighborTypes[Back] = getBlock(x, y, z - 1);
-                }
-
-                // Left (X-)
-                if (x == 0) {
-                    neighborTypes[Left] = (chunkNx != nullptr) ? chunkNx->getBlock(Config::chunkSize - 1, y, z) : BlockType::Air;
-                } else {
-                    neighborTypes[Left] = getBlock(x - 1, y, z);
-                }
-
-                // Right (X+)
-                if (x + 1 == Config::chunkSize) {
-                    neighborTypes[Right] = (chunkPx != nullptr) ? chunkPx->getBlock(0, y, z) : BlockType::Air;
-                } else {
-                    neighborTypes[Right] = getBlock(x + 1, y, z);
-                }
-
-                // Top (Y+)
-                if (y + 1 == Config::chunkSize) {
-                    neighborTypes[Top] = (chunkPy != nullptr) ? chunkPy->getBlock(x, 0, z) : BlockType::Air;
-                } else {
-                    neighborTypes[Top] = getBlock(x, y + 1, z);
-                }
-
-                // Bottom (Y-)
-                if (y == 0) {
-                    neighborTypes[Bottom] = (chunkNy != nullptr) ? chunkNy->getBlock(x, Config::chunkSize - 1, z) : BlockType::Air;
-                } else {
-                    neighborTypes[Bottom] = getBlock(x, y - 1, z);
-                }
-
-
+                const BlockType neighborTypes[] = {
+                    getBlock(x, y, z + 1), // Front
+                    getBlock(x, y, z - 1), // Back
+                    getBlock(x - 1, y, z), // Left
+                    getBlock(x + 1, y, z), // Right
+                    getBlock(x, y + 1, z), // Top
+                    getBlock(x, y - 1, z)  // Bottom
+                };
                 for (int i = 0; i < 6; i++) {
-                    if (currentBlockType == BlockType::Water ) {
-
-                        if (neighborTypes[i] == BlockType::Air) {
-                            shouldRenderFace[i] = true;
-                        }
-                    } else {
-
-                        if (isBlockTransparent(neighborTypes[i])) {
-                            shouldRenderFace[i] = true;
-                        }
+                    if (shouldRenderFace(currentBlock, neighborTypes[i])) {
+                        addFaceGeometry(i, x, y, z, currentBlock, chunkNeighbors, solidMesh, transparentMesh);
                     }
                 }
 
-                //bottom-right 0
-                //bottom-left 1
-                //top-left 2
-                //top-right 3
-                constexpr int triangleOrder[] = {0, 1, 2, 2, 3, 0};
-                for (int i = 0; i < 6; i++) {
-                    if (shouldRenderFace[i]) {
-                        Face face;
-                        for (int j = 0; j < 6; j++) {
-                            int cornerID = triangleOrder[j];
 
-
-
-                            int localX = static_cast<int>(faceVertices[i][j].x) + x;
-                            int localY = static_cast<int>(faceVertices[i][j].y) + y ;
-                            int localZ = static_cast<int>(faceVertices[i][j].z) + z;
-                            int worldY = localY + m_chunkPositionY * Config::chunkSize;
-
-                            int texX, texY;
-                            TextureManager::getTexturePosition(texX, texY, currentBlockType, (FaceDirection)i);
-
-                            const u_int8_t aoLevel = computeCornerAo(static_cast<FaceDirection>(i), cornerID, x, y, z,
-                               chunkNx, chunkPx, chunkNy, chunkPy, chunkNz, chunkPz);
-
-                            face.vertices[j].packedData = getPackedVertexData(localX,worldY,localZ,texX,texY,aoLevel);
-                        }
-
-
-                        if (currentBlockType == BlockType::Water ) {
-                            transparentMesh.push_back(face);
-                        } else {
-                            solidMesh.push_back(face);
-                        }
-                    }
-                }
             }
         }
     }
-}
 
+    //we delegate checking edge blocks to another function in order to make core loop avoid branching mispredictions
+    generateBorderMesh(solidMesh,transparentMesh,chunkNeighbors);
+}
+void Chunk::generateBorderMesh(std::vector<Face>& solidMesh,std::vector<Face>&transparentMesh, const ChunkNeighbors& chunkNeighbors)const {
+
+    int S = Config::chunkSize;
+
+    auto processBlock = [&](int x, int y, int z) __attribute__((always_inline)) {
+        BlockType currentBlock = blocks[index(x, y, z)];
+
+        if (currentBlock == BlockType::Air) return;
+
+        BlockType neighborTypes[6];
+
+        neighborTypes[Front]= (z + 1 < S) ? blocks[index(x, y, z + 1)] : (chunkNeighbors.front ? chunkNeighbors.front->getBlock(x, y, 0) : BlockType::Air);
+        neighborTypes[Back]  = (z - 1 >= 0) ? blocks[index(x, y, z - 1)] : (chunkNeighbors.back ? chunkNeighbors.back->getBlock(x, y, S-1) : BlockType::Air);
+        neighborTypes[Left]  = (x - 1 >= 0) ? blocks[index(x - 1, y, z )] : (chunkNeighbors.left ? chunkNeighbors.left->getBlock(S-1, y, z) : BlockType::Air);
+        neighborTypes[Right]  = (x + 1 < S) ? blocks[index(x + 1, y, z )] : (chunkNeighbors.right ? chunkNeighbors.right->getBlock(0, y, z) : BlockType::Air);
+        neighborTypes[Top]  = (y + 1  < S) ? blocks[index(x, y + 1, z )] : (chunkNeighbors.top ? chunkNeighbors.top->getBlock(x, 0, z) : BlockType::Air);
+        neighborTypes[Bottom]  = (y - 1 >= 0) ? blocks[index(x, y - 1, z )] : (chunkNeighbors.bottom ? chunkNeighbors.bottom->getBlock(x, S-1, z) : BlockType::Air);
+
+
+        for (int i = 0; i < 6; i++) {
+            if (shouldRenderFace(currentBlock, neighborTypes[i])) {
+                addFaceGeometry(i, x, y, z, currentBlock, chunkNeighbors, solidMesh, transparentMesh);
+            }
+        }
+    };
+
+    for (int y = 0; y < S; y++) {
+        for (int x = 0; x < S; x++) {
+            processBlock(x, y, 0);
+            processBlock(x, y, S - 1);
+        }
+    }
+
+
+    for (int z = 1; z < S - 1; z++) {
+        for (int x = 0; x < S; x++) {
+            processBlock(x, 0, z);
+            processBlock(x, S - 1, z);
+        }
+    }
+
+    for (int z = 1; z < S - 1; z++) {
+        for (int y = 1; y < S - 1; y++) {
+            processBlock(0, y, z);
+            processBlock(S - 1, y, z);
+        }
+    }
+
+}
 
