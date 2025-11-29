@@ -16,10 +16,8 @@ public:
     ~ChunkColumn();
 
 
-    // Step 2: Add synchronization tools
     std::mutex m_meshDataMutex; // Protects m_solidMesh and m_transparentMesh
 
-    // Step 3: Add atomic state flags
     std::atomic<bool> m_isMeshDirty{true};       // Set to true when blocks change
     std::atomic<bool> m_isGeneratingMesh{false}; // True if in thread pool
     std::atomic<bool> m_meshReadyForUpload{false};
@@ -60,37 +58,31 @@ public:
 
 
     [[nodiscard]] bool isMeshDirty() const { return m_isMeshDirty; }
-    [[nodiscard]] bool isCpuMeshReady() const { return m_cpuMeshReady; }
-    [[nodiscard]] bool isGpuMeshReady() const { return m_gpuMeshReady; }
     [[nodiscard]] unsigned int getSolidMeshSize() const { return m_solidMeshSize; }
     [[nodiscard]] unsigned int getTransparentMeshSize() const { return m_transparentMeshSize; }
 
 
-    void setMeshDirty(bool dirty) {
-        m_isMeshDirty = dirty;
-    }
-    void setGpuMeshReady(bool ready) { m_gpuMeshReady = ready; }
-    void setCpuMeshReady(bool ready) { m_cpuMeshReady = ready; }
-
-
-private:
-
-    void resetMeshesContainers();
+    void setMeshDirty(bool dirty) {m_isMeshDirty = dirty;}
 
     int m_posX;
     int m_posZ;
+private:
+
+
+
+
+    World& m_world;
+
     std::array<Chunk,Config::chunkColumnHeight> m_chunks;
+
     std::vector<Face> m_solidMesh;
     std::vector<Face> m_transparentMesh;
-
 
     ChunkColumn* m_nbrChunkColumnNX = nullptr;
     ChunkColumn* m_nbrChunkColumnNZ = nullptr;
     ChunkColumn* m_nbrChunkColumnPX = nullptr;
     ChunkColumn* m_nbrChunkColumnPZ = nullptr;
 
-    bool m_cpuMeshReady = false;
-    bool m_gpuMeshReady = false;
 
     // GPU DATA
     unsigned int m_solidVAO = 0;
@@ -99,4 +91,6 @@ private:
     unsigned int m_transparentVBO = 0;
     unsigned int m_solidMeshSize = 0;
     unsigned int m_transparentMeshSize = 0;
+
+    void generateTerrain();
 };

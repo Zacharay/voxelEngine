@@ -15,32 +15,25 @@ endif()
 find_package(GLFW3 REQUIRED)
 find_package(OpenGL REQUIRED)
 
+# --- FIX: Corrected 'thirdPart' to 'thirdParty' ---
 file(GLOB_RECURSE SOURCES
-    ${CMAKE_SOURCE_DIR}/src/*.cpp
-    ${CMAKE_SOURCE_DIR}/src/*.c
+        ${CMAKE_SOURCE_DIR}/src/*.cpp
+        ${CMAKE_SOURCE_DIR}/src/*.c
+        ${CMAKE_SOURCE_DIR}/thirdParty/imgui/*.cpp
 )
 
-# Add the executable
+# --- CLEANUP: Removed manually listed files that are already in SOURCES ---
 add_executable(voxelEngine ${SOURCES}
-        src/Shader.cpp
-        include/Shader.hpp
-        include/MeshRenderer.hpp
-        include/Camera.hpp
-        include/Config.hpp
-        include/ChunkColumn.hpp
-        src/ChunkColumn.cpp
-        include/Timer.hpp
-        include/WorldGenerator.hpp
-        include/TextureManager.hpp
-        src/WorldGenerator.cpp
-        include/ThreadPool.hpp)
+        include/PlayerController.hpp
+        src/PlayerController.cpp)
 
+# Custom commands for copying assets
 add_custom_command(
         TARGET voxelEngine POST_BUILD
         COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${CMAKE_SOURCE_DIR}/textures
         $<TARGET_FILE_DIR:voxelEngine>/textures
-        COMMENT "Kopiowanie tekstur do folderu kompilacji"
+        COMMENT "Copying textures..."
 )
 
 add_custom_command(
@@ -48,15 +41,14 @@ add_custom_command(
         COMMAND ${CMAKE_COMMAND} -E copy_directory
         ${CMAKE_SOURCE_DIR}/shaders
         $<TARGET_FILE_DIR:voxelEngine>/shaders
-        COMMENT "Kopiowanie shaderów do folderu kompilacji"
+        COMMENT "Copying shaders..."
 )
-
 
 # Include directories
 include_directories(${OPENGL_INCLUDE_DIRS})
-include_directories(${CMAKE_SOURCE_DIR}/thirdParty)
+include_directories(${CMAKE_SOURCE_DIR}/thirdParty) # Ensure this matches your folder name on disk
 include_directories(${GLFW_INCLUDE_DIRS})
 include_directories(${CMAKE_SOURCE_DIR}/include)
+
 # Link libraries
 target_link_libraries(voxelEngine PRIVATE glfw ${OPENGL_LIBRARIES})
-

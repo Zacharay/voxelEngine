@@ -147,16 +147,28 @@ unsigned int MeshRenderer::loadTextureAtlas(const std::string &path) {
 void MeshRenderer::renderSolidChunks(const ChunkMap &chunks)const {
 
     m_solidShader->useProgram();
-    constexpr auto modelMatrix = glm::mat4(1.0f);
+    glm::mat4 modelMatrix = glm::mat4(1.0f);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, m_textureAtlas);
     m_solidShader->setInt(0, "textureAtlas");
-    m_solidShader->setMat4(modelMatrix,"model");
+
     m_solidShader->setMat4(m_projectionMatrix,"projection");
     m_solidShader->setMat4(m_viewMatrix,"view");
     unsigned int faceCountCounter = 0;
     for(auto &chunk : chunks) {
+        ChunkColumn* column = chunk.second.get();
+
+        modelMatrix = glm::mat4(1.0f);
+
+
+        modelMatrix = glm::translate(modelMatrix,
+            glm::vec3(
+                static_cast<float>(column->m_posX) * Config::chunkSize,
+                0.0f,
+                static_cast<float>(column->m_posZ) * Config::chunkSize
+            ));
+            m_solidShader->setMat4(modelMatrix, "model");
 
             chunk.second->bindSolidMesh();
             glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(chunk.second->getSolidMeshSize()) * 6 );
@@ -178,7 +190,6 @@ void MeshRenderer::renderTransparentChunks(const ChunkMap &chunks)const {
 
     m_transparentShader->setFloat((float)glfwGetTime(),"time");
     m_transparentShader->setInt(0, "textureAtlas");
-    m_transparentShader->setMat4(modelMatrix,"model");
     m_transparentShader->setMat4(m_projectionMatrix,"projection");
     m_transparentShader->setMat4(m_viewMatrix,"view");
 
@@ -189,6 +200,19 @@ void MeshRenderer::renderTransparentChunks(const ChunkMap &chunks)const {
 
     for(auto &chunk : chunks) {
         if(!chunk.second->isMeshDirty()) {
+            ChunkColumn* column = chunk.second.get();
+
+            modelMatrix = glm::mat4(1.0f);
+
+             modelMatrix = glm::translate(modelMatrix,
+                glm::vec3(
+                    static_cast<float>(column->m_posX) * Config::chunkSize,
+                    0.0f,
+                    static_cast<float>(column->m_posZ) * Config::chunkSize
+                ));
+             m_transparentShader->setMat4(modelMatrix, "model");
+
+
             chunk.second->bindTransparentMesh();
             glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(chunk.second->getTransparentMeshSize()) * 6 );
         }

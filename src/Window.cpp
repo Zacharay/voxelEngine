@@ -2,6 +2,12 @@
 #include <iostream>
 #include "Config.hpp"
 #include <fstream>
+
+
+#include "imgui/imgui.h"
+#include "imgui/imgui_impl_glfw.h"
+#include "imgui/imgui_impl_opengl3.h"
+
 // Constructor
 Window::Window() : m_window(nullptr) {
 
@@ -24,6 +30,14 @@ Window::Window() : m_window(nullptr) {
     if (!gladLoadGLLoader((GLADloadproc)glfwGetProcAddress)) {
         throw std::runtime_error("Failed to initialize GLAD");
     }
+
+
+    IMGUI_CHECKVERSION();
+    ImGui::CreateContext();
+    ImGuiIO& io = ImGui::GetIO(); (void)io;
+    ImGui::StyleColorsDark();
+    ImGui_ImplGlfw_InitForOpenGL(m_window, true);
+    ImGui_ImplOpenGL3_Init("#version 440");
 
     glViewport(0, 0, Config::windowWidth, Config::windowHeight);
     if(Config::wireframeMode) glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);;
@@ -76,10 +90,27 @@ void Window::run()  {
         
         onUpdate();
 
+
+        ImGui_ImplOpenGL3_NewFrame();
+        ImGui_ImplGlfw_NewFrame();
+        ImGui::NewFrame();
+
+
+        ImGui::Begin("Performance");
+
+        ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
+
+
+        ImGui::Text("Frame time: %.3f ms", 1000.0f / ImGui::GetIO().Framerate);
+
+        ImGui::End();
+
+        ImGui::Render();
+
         onRender();
 
-        calculateFps();
 
+        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
         glfwSwapBuffers(m_window);
         glfwPollEvents();
     }

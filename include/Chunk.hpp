@@ -8,17 +8,16 @@
 #include "glm/vec2.hpp"
 #include "WorldGenerator.hpp"
 
+#include <sys/types.h>
 
 enum class BlockType:unsigned char;
 class World;
 struct Face;
 
 
-
+// aaax xxxx yyyy zzzz zxxx xx
 struct Vertex {
-    glm::vec3 position;
-    glm::vec2 textureCoordinates;
-    std::uint8_t ao; //
+    std::uint32_t packedData;
 };
 struct Face {
     Vertex vertices[6];
@@ -74,12 +73,7 @@ private:
                                  Chunk* chunkPy, Chunk* chunkNz, Chunk* chunkPz);
 
     std::uint8_t calcAO(float side1, float side2, float corner);
-
-
-    glm::vec3 convertToWorldCoordinates(const glm::vec3& coordinates) const;
-
-
-
+    static u_int32_t getPackedVertexData(int posX,int posY,int posZ,int texX,int texY,u_int8_t aO);
     static constexpr unsigned int index(int x, int y, int z) {
         return x + y * Config::chunkSize + z * Config::chunkSize * Config::chunkSize;
     }
@@ -88,8 +82,6 @@ private:
     static bool isBlockTransparent(BlockType type) {
         return type == BlockType::Air || type == BlockType::Water;
     }
-
-
 
     std::array<BlockType, CHUNK_VOLUME> blocks{};
     World* m_world = nullptr;

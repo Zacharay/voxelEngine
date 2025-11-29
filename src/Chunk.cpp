@@ -7,28 +7,37 @@
 #include "World.hpp"
 #include <iostream>
 
-
+// winding order
 //bottom right //bottom left //top left //top right
-constexpr std::array<std::array<glm::vec3, 6>, 6> faceVertices = {{
-    // Front face (Z+)
-    { glm::vec3(0.5f, -0.5f, 0.5f), glm::vec3(-0.5f, -0.5f, 0.5f), glm::vec3(-0.5f, 0.5f, 0.5f),
-      glm::vec3(-0.5f, 0.5f, 0.5f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(0.5f, -0.5f, 0.5f) },
-    // Back face (Z-)
-    { glm::vec3(0.5f, -0.5f, -0.5f), glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(-0.5f, 0.5f, -0.5f),
-      glm::vec3(-0.5f, 0.5f, -0.5f), glm::vec3(0.5f, 0.5f, -0.5f), glm::vec3(0.5f, -0.5f, -0.5f) },
-    // Left face (X-)
-    { glm::vec3(-0.5f, -0.5f, 0.5f), glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(-0.5f, 0.5f, -0.5f),
-      glm::vec3(-0.5f, 0.5f, -0.5f), glm::vec3(-0.5f, 0.5f, 0.5f), glm::vec3(-0.5f, -0.5f, 0.5f) },
-    // Right face (X+)
-    { glm::vec3(0.5f, -0.5f, 0.5f), glm::vec3(0.5f, -0.5f, -0.5f), glm::vec3(0.5f, 0.5f, -0.5f),
-      glm::vec3(0.5f, 0.5f, -0.5f), glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(0.5f, -0.5f, 0.5f) },
-    // Top face (Y+)
-    { glm::vec3(0.5f, 0.5f, 0.5f), glm::vec3(-0.5f, 0.5f, 0.5f), glm::vec3(-0.5f, 0.5f, -0.5f),
-      glm::vec3(-0.5f, 0.5f, -0.5f), glm::vec3(0.5f, 0.5f, -0.5f), glm::vec3(0.5f, 0.5f, 0.5f) },
-    // Bottom face (Y-)
-    { glm::vec3(-0.5f, -0.5f, 0.5f), glm::vec3(0.5f, -0.5f, 0.5f), glm::vec3(0.5f, -0.5f, -0.5f),
-      glm::vec3(0.5f, -0.5f, -0.5f), glm::vec3(-0.5f, -0.5f, -0.5f), glm::vec3(-0.5f, -0.5f, 0.5f) }
+constexpr std::array<std::array<glm::ivec3, 6>, 6> faceVertices = {{
+    // Front face (Z+) -> Z=1
+    { glm::ivec3(1, 0, 1), glm::ivec3(0, 0, 1), glm::ivec3(0, 1, 1),
+      glm::ivec3(0, 1, 1), glm::ivec3(1, 1, 1), glm::ivec3(1, 0, 1) },
+
+    // Back face (Z-) -> Z=0
+    { glm::ivec3(1, 0, 0), glm::ivec3(0, 0, 0), glm::ivec3(0, 1, 0),
+      glm::ivec3(0, 1, 0), glm::ivec3(1, 1, 0), glm::ivec3(1, 0, 0) },
+
+    // Left face (X-) -> X=0
+    { glm::ivec3(0, 0, 1), glm::ivec3(0, 0, 0), glm::ivec3(0, 1, 0),
+      glm::ivec3(0, 1, 0), glm::ivec3(0, 1, 1), glm::ivec3(0, 0, 1) },
+
+    // Right face (X+) -> X=1
+    { glm::ivec3(1, 0, 1), glm::ivec3(1, 0, 0), glm::ivec3(1, 1, 0),
+      glm::ivec3(1, 1, 0), glm::ivec3(1, 1, 1), glm::ivec3(1, 0, 1) },
+
+    // Top face (Y+) -> Y=1
+    { glm::ivec3(1, 1, 1), glm::ivec3(0, 1, 1), glm::ivec3(0, 1, 0),
+      glm::ivec3(0, 1, 0), glm::ivec3(1, 1, 0), glm::ivec3(1, 1, 1) },
+
+    // Bottom face (Y-) -> Y=0
+    { glm::ivec3(0, 0, 1), glm::ivec3(1, 0, 1), glm::ivec3(1, 0, 0),
+      glm::ivec3(1, 0, 0), glm::ivec3(0, 0, 0), glm::ivec3(0, 0, 1) }
 }};
+
+///                     zzzz xxxx yyyy yyyy
+/// 0000 0000 0000 0000 0000 0000 0000 0000
+///
 
 //AO helpers
 struct AoOffsets {
@@ -96,32 +105,51 @@ void Chunk::init(int x, int y, int z, World &world) {
 }
 
 
+inline uint8_t Chunk::calcAO(float side1, float side2, float corner)
+{
+
+    if (side1 > 0.9f && side2 > 0.9f) {
+        return 0;
+    }
+
+    float totalOcclusion = side1 + side2 + corner;
+
+    float normalizedOcclusion = totalOcclusion / 3.0f;
+
+
+    float brightness = 1.0f - normalizedOcclusion;
+
+    float aoValue = (brightness * 7.0f) + 0.5f;
+
+    if (aoValue > 7.0f) aoValue = 7.0f;
+    if (aoValue < 0.0f) aoValue = 0.0f;
+
+    return static_cast<uint8_t>(aoValue);
+}
+
+
 float Chunk::getBlockOcclusion(int x, int y, int z, Chunk* chunkNx, Chunk* chunkPx, Chunk* chunkNy, Chunk* chunkPy, Chunk* chunkNz, Chunk* chunkPz) {
 
     BlockType blockType = BlockType::Air;
 
-    // Block inside this chunk
     if (x >= 0 && x < Config::chunkSize &&
         y >= 0 && y < Config::chunkSize &&
         z >= 0 && z < Config::chunkSize)
     {
         blockType = this->getBlock(x, y, z);
     }
-    // Block outside chunk but not corner/edge (check direct neighbors)
+
     else if ((x < 0 || x >= Config::chunkSize) + (y < 0 || y >= Config::chunkSize) + (z < 0 || z >= Config::chunkSize) == 1) {
         if (x < 0)                          blockType = chunkNx ? chunkNx->getBlock(Config::chunkSize + x, y, z) : BlockType::Air;
         else if (x >= Config::chunkSize)    blockType = chunkPx ? chunkPx->getBlock(x - Config::chunkSize, y, z) : BlockType::Air;
         else if (y < 0)                     blockType = chunkNy ? chunkNy->getBlock(x, Config::chunkSize + y, z) : BlockType::Air;
         else if (y >= Config::chunkSize)    blockType = chunkPy ? chunkPy->getBlock(x, y - Config::chunkSize, z) : BlockType::Air;
         else if (z < 0)                     blockType = chunkNz ? chunkNz->getBlock(x, y, Config::chunkSize + z) : BlockType::Air;
-        else if (z>= Config::chunkSize)     blockType = chunkPz ? chunkPz->getBlock(x, y, z - Config::chunkSize) : BlockType::Air;
+        else if (z >= Config::chunkSize)    blockType = chunkPz ? chunkPz->getBlock(x, y, z - Config::chunkSize) : BlockType::Air;
     }
-    // Block outside chunk on an edge or corner
     else {
-       // glm::vec3 globalPos = convertToWorldCoordinates(glm::vec3(x, y, z));
-        //blockType = m_world->getBlockAt(globalPos);
+        blockType = BlockType::Air;
     }
-
 
     if (blockType == BlockType::Air) {
         return 0.0f;
@@ -130,29 +158,6 @@ float Chunk::getBlockOcclusion(int x, int y, int z, Chunk* chunkNx, Chunk* chunk
     } else {
         return 1.0f;
     }
-
-}
-
-
-inline uint8_t Chunk::calcAO(float side1, float side2, float corner)
-{
-    const float MAX_AO = 255.0f;
-    const float AO_SCALE = 195.0f;
-    const int MIN_AO = 60;
-
-    if (side1 > 0.9f && side2 > 0.9f) {
-        return MIN_AO;
-    }
-
-    float totalOcclusion = side1 + side2 + corner;
-
-
-    float aoFactor = totalOcclusion / 3.0f; // Normalize occlusion to 0.0 - 1.0
-    uint8_t aoValue = static_cast<uint8_t>(MAX_AO - aoFactor * AO_SCALE); // Map 0->255, 1->60
-
-    return aoValue;
-
-
 }
 u_int8_t Chunk::computeCornerAo(FaceDirection faceDir,int corner,int x,int y,int z,Chunk* chunkNx, Chunk* chunkPx, Chunk* chunkNy, Chunk* chunkPy, Chunk* chunkNz, Chunk* chunkPz) {
 
@@ -165,11 +170,6 @@ u_int8_t Chunk::computeCornerAo(FaceDirection faceDir,int corner,int x,int y,int
     float sideTwoOcclusion = getBlockOcclusion(x + offsets.side2.x, y + offsets.side2.y, z + offsets.side2.z,
                                                chunkNx, chunkPx, chunkNy, chunkPy, chunkNz, chunkPz);
 
-    // we greedy check sides if they both are fully ocluded
-    // we return minAO to prevent checking corner which is slow due to map searching
-    if (sideOneOcclusion > 0.9f && sideTwoOcclusion > 0.9f) {
-        return 60;
-    }
 
     float cornerOcclusion = getBlockOcclusion(x + offsets.corner.x, y + offsets.corner.y, z + offsets.corner.z,
                                               chunkNx, chunkPx, chunkNy, chunkPy, chunkNz, chunkPz);
@@ -191,18 +191,31 @@ void Chunk::setBlock(int x,int y,int z,BlockType block) {
 BlockType Chunk::getBlock(int x, int y, int z)const {
     return blocks[index(x,y,z)];
 }
+u_int32_t Chunk::getPackedVertexData(const int posX,const int posY,const int posZ,const int texX,const int texY,const u_int8_t aO) {
+    // 4. PACKING (32 bits total)
+    std::uint32_t packedData = 0;
 
-glm::vec3 Chunk::convertToWorldCoordinates(const glm::vec3 &coordinates)const {
-    const glm::vec3 offsetVec = glm::vec3(
-                   static_cast<float>(m_chunkPositionX) * Config::chunkSize ,
-                   static_cast<float>(m_chunkPositionY) * Config::chunkSize ,
-                   static_cast<float>(m_chunkPositionZ) * Config::chunkSize );
+    // Y: 9 bits [0-8]
+    packedData |= (posY & 0x1FF);
 
+    // X: 5 bits [9-13]
+    packedData |= (posX & 0x1F) << 9;
 
-    return coordinates + offsetVec;
+    // Z: 5 bits [14-18]
+    packedData |= (posZ & 0x1F) << 14;
+
+    // Texture X: 5 bits [19-23]
+    packedData |= (texX & 0x1F) << 19;
+
+    // Texture Y: 5 bits [24-28]
+    packedData |= (texY & 0x1F) << 24;
+
+    // AO: 3 bits [29-31]
+    packedData |= (aO & 0x7) << 29;
+
+    return packedData;
 
 }
-
 
 void Chunk::generateMesh(std::vector<Face>& solidMesh,std::vector<Face>&transparentMesh, Chunk* chunkNx, Chunk* chunkPx, Chunk* chunkNy, Chunk* chunkPy, Chunk* chunkNz, Chunk* chunkPz) {
     for (int z = 0; z < Config::chunkSize; z++) {
@@ -283,12 +296,23 @@ void Chunk::generateMesh(std::vector<Face>& solidMesh,std::vector<Face>&transpar
                         Face face;
                         for (int j = 0; j < 6; j++) {
                             int cornerID = triangleOrder[j];
-                            glm::vec3 vertexPos = convertToWorldCoordinates(faceVertices[i][j] + glm::vec3(x, y, z));
-                            face.vertices[j].position = vertexPos;
-                            face.vertices[j].ao = computeCornerAo(static_cast<FaceDirection>(i), cornerID, x, y, z,
-                                chunkNx, chunkPx, chunkNy, chunkPy, chunkNz, chunkPz);
+
+
+
+                            int localX = static_cast<int>(faceVertices[i][j].x) + x;
+                            int localY = static_cast<int>(faceVertices[i][j].y) + y ;
+                            int localZ = static_cast<int>(faceVertices[i][j].z) + z;
+                            int worldY = localY + m_chunkPositionY * Config::chunkSize;
+
+                            int texX, texY;
+                            TextureManager::getTexturePosition(texX, texY, currentBlockType, (FaceDirection)i);
+
+                            const u_int8_t aoLevel = computeCornerAo(static_cast<FaceDirection>(i), cornerID, x, y, z,
+                               chunkNx, chunkPx, chunkNy, chunkPy, chunkNz, chunkPz);
+
+                            face.vertices[j].packedData = getPackedVertexData(localX,worldY,localZ,texX,texY,aoLevel);
                         }
-                        TextureManager::getTextureCoordinates(face.vertices, currentBlockType, (FaceDirection)i);
+
 
                         if (currentBlockType == BlockType::Water ) {
                             transparentMesh.push_back(face);

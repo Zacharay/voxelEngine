@@ -11,9 +11,11 @@ Camera::Camera(glm::vec3 position, glm::vec3 front, glm::vec3 up) {
     yaw = -90.0f;
     pitch = 0.0f;
 
+
+    m_viewDirtyFlag = true;
 }
 void Camera::processKeyboardInput(Camera_Movement direction, double deltaTime) {
-    const float cameraSpeed = 150.0f * deltaTime;
+    const float cameraSpeed = 50.0f * deltaTime;
 
     glm::vec3 right = glm::normalize(glm::cross(m_front, m_up));
 
@@ -35,6 +37,8 @@ void Camera::processKeyboardInput(Camera_Movement direction, double deltaTime) {
     else if(Camera_Movement::DOWN == direction) {
         m_position -= m_up * cameraSpeed;
     }
+
+    m_viewDirtyFlag = true;
 }
 
 void Camera::processMouseInput(float xOffset, float yOffset) {
@@ -52,11 +56,21 @@ void Camera::processMouseInput(float xOffset, float yOffset) {
     direction.y = sin(glm::radians(pitch));
     direction.z = sin(glm::radians(yaw)) * cos(glm::radians(pitch));
     m_front = glm::normalize(direction);
+
+    m_viewDirtyFlag = true;
 }
 
-glm::mat4 Camera::getViewMatrix() const {
-    return glm::lookAt(m_position, m_position + m_front, m_up);
+const glm::mat4& Camera::getViewMatrix() const {
+    if(m_viewDirtyFlag) {
+        m_viewMatrix = glm::lookAt(m_position, m_position + m_front, m_up);
+        m_viewDirtyFlag = false;
+    }
+
+    return m_viewMatrix;
 }
-glm::vec3 Camera::getPosition()const {
+const glm::vec3& Camera::getFront()const {
+    return m_front;
+}
+const glm::vec3& Camera::getPosition()const {
     return m_position;
 }

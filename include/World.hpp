@@ -24,6 +24,13 @@ namespace std {
 
 using ChunkMap = std::unordered_map<glm::ivec2, std::unique_ptr<ChunkColumn>>;
 
+struct RaycastResult {
+    bool hit;               // Czy trafiliśmy w blok?
+    glm::ivec3 blockPos;    // Pozycja trafionego bloku (do niszczenia)
+    glm::ivec3 faceNormal;  // Wektor normalny ściany (do stawiania bloku obok)
+    BlockType blockType;    // Typ trafionego bloku
+};
+
 class World {
 public:
     World();
@@ -40,6 +47,8 @@ public:
     float getHumidityNoiseVal(int x,int y)const;
     void processChunkMeshes();
     BlockType getBlockAt(glm::ivec3 worldPos);
+    void setBlockAt(glm::ivec3 pos,BlockType blockType);
+    RaycastResult rayCast(const glm::vec3& origin, const glm::vec3& direction, float maxDist);
 private:
     std::unique_ptr<ThreadPool> m_threadPool;
 

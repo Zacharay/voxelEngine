@@ -5,6 +5,8 @@
 #include <WorldGenerator.hpp>
 
 
+
+
 World::World() {
 
     m_noise.SetNoiseType(FastNoiseLite::NoiseType_Perlin);
@@ -101,10 +103,28 @@ BlockType World::getBlockAt(glm::ivec3 pos) {
     return column->getBlockAt(localX, pos.y, localZ);
 
 }
+void World::setBlockAt(glm::ivec3 pos,BlockType blockType) {
+    const int chunkXIndex = pos.x >> Config::chunkSizeShift;
+    const int chunkZIndex = pos.z >> Config::chunkSizeShift;
+    const int localX = pos.x & Config::chunkSizeMask;
+    const int localZ = pos.z  & Config::chunkSizeMask;
+
+    ChunkColumn* column = getChunkColumn(chunkXIndex, chunkZIndex);
+    if (!column) return ;
+
+    //check if rebuild neighbouring chunk if on border of the current chunk
+    if(localX == 0) column->getNeighbourNx()->setMeshDirty(true);
+    if(localX == Config::chunkSize-1 ) column->getNeighbourPx()->setMeshDirty(true);
+    if(localZ == 0) column->getNeighbourNz()->setMeshDirty(true);
+    if(localZ == Config::chunkSize-1 ) column->getNeighbourPz()->setMeshDirty(true);
+
+    return column->setBlockAt(localX, pos.y, localZ,blockType);
+}
+
 
 void World::processChunkMeshes() {
 
-    const int MAX_UPLOADS_PER_FRAME = 256;
+    const int MAX_UPLOADS_PER_FRAME =1000;
     int uploadedCount = 0;
 
 
@@ -125,10 +145,7 @@ void World::processChunkMeshes() {
 
 
         if (column->m_isMeshDirty && !column->m_isGeneratingMesh && !column->m_meshReadyForUpload) {
-
-
             column->m_isGeneratingMesh = true;
-
 
             ChunkColumn* columnPtr = column.get();
 
@@ -138,6 +155,73 @@ void World::processChunkMeshes() {
         }
     }
 }
+
+RaycastResult World::rayCast(const glm::vec3 &origin, const glm::vec3 &direction, float maxDist) {
+    RaycastResult result;
+    result.hit = false;
+
+
+    int x = floor(origin.x);
+    int y = floor(origin.y);
+    int z = floor(origin.z);
+
+
+    int stepX = (direction.x > 0) ? 1 : -1;
+    int stepY = (direction.y > 0) ? 1 : -1;
+    int stepZ = (direction.z > 0) ? 1 : -1;
+
+    float tDeltaX = (direction.x != 0) ? std::abs(1.0f / direction.x) : 100000.0f;
+    float tDeltaY = (direction.y != 0) ? std::abs(1.0f / direction.y) : 100000.0f;
+    float tDeltaZ = (direction.z != 0) ? std::abs(1.0f / direction.z) : 100000.0f;
+
+
+    float tMaxX = (direction.x > 0) ? (floor(origin.x) + 1 - origin.x) * tDeltaX : (origin.x - floor(origin.x)) * tDeltaX;
+    float tMaxY = (direction.y > 0) ? (floor(origin.y) + 1 - origin.y) * tDeltaY : (origin.y - floor(origin.y)) * tDeltaY;
+    float tMaxZ = (direction.z > 0) ? (floor(origin.z) + 1 - origin.z) * tDeltaZ : (origin.z - floor(origin.z)) * tDeltaZ;
+
+    float distance = 0.0f;
+
+
+    while (distance <= maxDist) {
+
+        BlockType blockID = getBlockAt(glm::ivec3(x, y, z));
+        if (blockID != BlockType::Air) {
+            result.hit = true;
+            result.blockPos = glm::ivec3(x, y, z);
+            result.blockType = blockID;
+            return result;
+        }
+        
+        if (tMaxX < tMaxY) {
+            if (tMaxX < tMaxZ) {
+                x += stepX;
+                distance = tMaxX;
+                tMaxX += tDeltaX;
+                result.faceNormal = glm::ivec3(-stepX, 0, 0);
+            } else {
+                z += stepZ;
+                distance = tMaxZ;
+                tMaxZ += tDeltaZ;
+                result.faceNormal = glm::ivec3(0, 0, -stepZ);
+            }
+        } else {
+            if (tMaxY < tMaxZ) {
+                y += stepY;
+                distance = tMaxY;
+                tMaxY += tDeltaY;
+                result.faceNormal = glm::ivec3(0, -stepY, 0);
+            } else {
+                z += stepZ;
+                distance = tMaxZ;
+                tMaxZ += tDeltaZ;
+                result.faceNormal = glm::ivec3(0, 0, -stepZ);
+            }
+        }
+    }
+
+    return result;
+}
+
 
 void World::unloadFarChunks(int playerChunkX,int playerChunkZ) {
     const int unloadRadius = static_cast<int>(Config::chunkRadius) + 1;

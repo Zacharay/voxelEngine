@@ -15,6 +15,7 @@ enum class BlockType :unsigned char{
     Dirt,
     OAK_LOG,
     OAK_LEAVES,
+    OAK_PLANKS,
     Spruce_Log,
     Spruce_Leaves,
     Cactus,

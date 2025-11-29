@@ -10,67 +10,13 @@
 #include "WorldGenerator.hpp"
 
 
-ChunkColumn::ChunkColumn(int x,int z,World& world)
+ChunkColumn::ChunkColumn(int x,int z,World& world):m_posX(x),m_posZ(z),m_world(world)
 {
-    m_posX = x;
-    m_posZ = z;
-
     for(int y=0;y < Config::chunkColumnHeight ;y++) {
         m_chunks[y].init(m_posX,y,m_posZ,world);
     }
 
-    const int  offsetX = m_posX * static_cast<int>(Config::chunkSize);
-    const int  offsetZ = m_posZ * static_cast<int>(Config::chunkSize);
-
-    const int TERRAIN_BASE_HEIGHT = Config::SEA_LEVEL - 40;
-    const int TERRAIN_AMPLITUDE = 100;
-
-    for(int localX = 0; localX < Config::chunkSize; localX++) {
-        for(int localZ = 0; localZ < Config::chunkSize; localZ++) {
-            const int globalX = localX + offsetX;
-            const int globalZ = localZ + offsetZ;
-
-
-            const float heightNoiseVal = world.getHeightNoiseVal(globalX,globalZ);
-            const float temp = world.getTemperatureNoiseVal(globalX,globalZ);
-            const float humidity = world.getHumidityNoiseVal(globalX,globalZ);
-
-
-            const float normalizedNoise = (heightNoiseVal) / 2.0f;
-
-
-            const int terrainHeight = static_cast<int>(TERRAIN_BASE_HEIGHT + (normalizedNoise * TERRAIN_AMPLITUDE));
-
-
-            BiomeType biome = WorldGenerator::getBiomeType(temp,humidity,terrainHeight);
-
-
-            for(int globalY = 0; globalY < Config::chunkMaxBlockHeight; globalY++) {
-
-                BlockType blockToSet;
-                if (globalY > terrainHeight) {
-
-                    if (globalY <= Config::SEA_LEVEL) {
-                        blockToSet = BlockType::Water;
-                    } else {
-                        break;
-                    }
-                } else {
-                    blockToSet = WorldGenerator::generateBlock(globalY,biome);
-                }
-
-
-                setBlockAt(localX,globalY,localZ,blockToSet);
-
-            }
-
-            const float treeNoiseVal = world.getTreeNoiseVal(globalX,globalZ);
-            WorldGenerator::spawnNature(*this,treeNoiseVal,localX,terrainHeight,localZ,biome);
-
-        }
-    }
-
-    resetMeshesContainers();
+    generateTerrain();
 }
 ChunkColumn::~ChunkColumn() {
     destroyGL();           // free VAO/VBO
@@ -112,13 +58,71 @@ void ChunkColumn::setBlockAt(int localX, int worldY, int localZ,BlockType block)
     const int localY = worldY & Config::chunkSizeMask;
 
     m_chunks[chunkYIndex].setBlock(localX,localY,localZ,block);
-}
 
+    m_isMeshDirty = true;
+}
+void ChunkColumn::generateTerrain() {
+
+    const int  offsetX = m_posX * static_cast<int>(Config::chunkSize);
+    const int  offsetZ = m_posZ * static_cast<int>(Config::chunkSize);
+
+    const int TERRAIN_BASE_HEIGHT = Config::SEA_LEVEL - 40;
+    const int TERRAIN_AMPLITUDE = 100;
+
+    for(int localX = 0; localX < Config::chunkSize; localX++) {
+        for(int localZ = 0; localZ < Config::chunkSize; localZ++) {
+            const int globalX = localX + offsetX;
+            const int globalZ = localZ + offsetZ;
+
+
+            const float heightNoiseVal = m_world.getHeightNoiseVal(globalX,globalZ);
+            const float temp = m_world.getTemperatureNoiseVal(globalX,globalZ);
+            const float humidity = m_world.getHumidityNoiseVal(globalX,globalZ);
+
+
+            const float normalizedNoise = (heightNoiseVal) / 2.0f;
+
+
+            const int terrainHeight = static_cast<int>(TERRAIN_BASE_HEIGHT + (normalizedNoise * TERRAIN_AMPLITUDE));
+
+
+            BiomeType biome = WorldGenerator::getBiomeType(temp,humidity,terrainHeight);
+
+
+            for(int globalY = 0; globalY < Config::chunkMaxBlockHeight; globalY++) {
+
+                BlockType blockToSet;
+                if (globalY > terrainHeight) {
+
+                    if (globalY <= Config::SEA_LEVEL) {
+                        blockToSet = BlockType::Water;
+                    } else {
+                        break;
+                    }
+                } else {
+                    blockToSet = WorldGenerator::generateBlock(globalY,biome);
+                }
+
+
+                setBlockAt(localX,globalY,localZ,blockToSet);
+
+            }
+
+            const float treeNoiseVal = m_world.getTreeNoiseVal(globalX,globalZ);
+            WorldGenerator::spawnNature(*this,treeNoiseVal,localX,terrainHeight,localZ,biome);
+
+        }
+    }
+}
 void ChunkColumn::generateMesh() {
 
     std::vector<Face> tempSolidMesh;
     std::vector<Face> tempTransparentMesh;
+
+    tempSolidMesh.reserve(Config::chunkSize * Config::chunkSize * Config::chunkSize);
+    tempTransparentMesh.reserve(Config::chunkSize * Config::chunkSize);
     for(int i=0;i<Config::chunkSize;i++) {
+
         Chunk &chunk = m_chunks[i];
         if(chunk.isChunkEmpty())continue;
 
@@ -145,14 +149,12 @@ void ChunkColumn::generateMesh() {
 
     }
 
-    // Now, lock the mutex to safely swap the generated data
+    // now lock the mutex to safely swap the generated data
     {
         std::lock_guard<std::mutex> lock(m_meshDataMutex);
         m_solidMesh = std::move(tempSolidMesh);
         m_transparentMesh = std::move(tempTransparentMesh);
     }
-
-
     m_meshReadyForUpload = true;
     m_isGeneratingMesh = false;
     m_isMeshDirty = false;
@@ -170,13 +172,12 @@ void ChunkColumn::uploadToGpu() {
     glBindBuffer(GL_ARRAY_BUFFER, m_solidVBO);
     glBufferData(GL_ARRAY_BUFFER, m_solidMesh.size() * sizeof(Face), m_solidMesh.data(), GL_STATIC_DRAW);
 
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
 
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, textureCoordinates));
-    glEnableVertexAttribArray(2);
-    glVertexAttribPointer(2, 1, GL_UNSIGNED_BYTE, GL_TRUE, sizeof(Vertex), (void*)offsetof(Vertex, ao));
+    glEnableVertexAttribArray(0);
+
+    glVertexAttribIPointer(0, 1, GL_UNSIGNED_INT, sizeof(Vertex), (void*)offsetof(Vertex, packedData));
+
+
 
     m_solidMeshSize = m_solidMesh.size();
     m_solidMesh.clear();
@@ -191,11 +192,10 @@ void ChunkColumn::uploadToGpu() {
      glBindBuffer(GL_ARRAY_BUFFER, m_transparentVBO);
      glBufferData(GL_ARRAY_BUFFER, m_transparentMesh.size() * sizeof(Face), m_transparentMesh.data(), GL_STATIC_DRAW);
 
-     glEnableVertexAttribArray(0);
-     glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)0);
 
-     glEnableVertexAttribArray(1);
-     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, textureCoordinates));
+    glEnableVertexAttribArray(0);
+    glVertexAttribIPointer(0, 1, GL_UNSIGNED_INT, sizeof(Vertex), (void*)offsetof(Vertex, packedData));
+
 
 
      m_transparentMeshSize = m_transparentMesh.size();
@@ -245,14 +245,4 @@ const std::vector<Face>& ChunkColumn::getMesh()const {
 }
 Chunk * ChunkColumn::getChunk(int height) {
     return &m_chunks[height];
-}
-
-void ChunkColumn::resetMeshesContainers() {
-    m_solidMesh.clear();
-    m_solidMesh.shrink_to_fit();
-    m_solidMesh.reserve(Config::chunkSize * Config::chunkSize * 6 * 2);
-
-    m_transparentMesh.clear();
-    m_transparentMesh.shrink_to_fit();
-    m_transparentMesh.reserve(Config::chunkSize * Config::chunkSize );
 }

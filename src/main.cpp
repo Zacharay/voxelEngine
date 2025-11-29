@@ -1,7 +1,11 @@
+
 #include "Application.hpp"
 #include  "Window.hpp"
 #include <stdexcept>
 #include <iostream>
+
+
+
 int main(){
 
     try {
