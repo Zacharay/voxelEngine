@@ -3,6 +3,7 @@
 #include "Config.hpp"
 #include <fstream>
 
+#include "GuiManager.hpp"
 #include "imgui/imgui.h"
 #include "imgui/imgui_impl_glfw.h"
 #include "imgui/imgui_impl_opengl3.h"
@@ -30,15 +31,16 @@ Window::Window() : m_window(nullptr) {
     }
 
 
-    IMGUI_CHECKVERSION();
-    ImGui::CreateContext();
-    ImGuiIO& io = ImGui::GetIO(); (void)io;
-    ImGui::StyleColorsDark();
-    ImGui_ImplGlfw_InitForOpenGL(m_window, true);
-    ImGui_ImplOpenGL3_Init("#version 440");
+    GuiManager::get().init(m_window);
 
     glViewport(0, 0, Config::windowWidth, Config::windowHeight);
     if(Config::wireframeMode) glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);;
+
+    m_gpuProfiler = std::make_unique<GpuProfiler>();
+
+    GuiManager::get().setGpuVendor(m_gpuProfiler->getVendor());
+    GuiManager::get().setGpuRenderer(m_gpuProfiler->getRenderer());
+    GuiManager::get().setDriverVersion(m_gpuProfiler->getVersion());
 
 
 }
@@ -48,7 +50,9 @@ Window::~Window() {
     if (m_window) {
         glfwDestroyWindow(m_window);
     }
+    GuiManager::get().shutdown();
     glfwTerminate();
+
 }
 void Window::log(const std::string& message) {
     std::ofstream logFile("voxelEngine.log", std::ios::app); // open in append mode
@@ -81,34 +85,43 @@ void Window::calculateFps() {
 void Window::run()  {
     glEnable(GL_DEPTH_TEST);
     glfwSwapInterval(0);
+
+    float lastFrameCpuTime = 0.0f;
+
     while (!glfwWindowShouldClose(m_window)) {
 
-        glClear(GL_COLOR_BUFFER_BIT|GL_DEPTH_BUFFER_BIT);
-        glClearColor(0.53f,0.8f,0.93f,1.0f);
-        
+        m_cpuTimer.start();
+
+
+        glClearColor(0.53f, 0.8f, 0.93f, 1.0f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+
         onUpdate();
 
 
-        ImGui_ImplOpenGL3_NewFrame();
-        ImGui_ImplGlfw_NewFrame();
-        ImGui::NewFrame();
+        GuiManager::get().beginFrame();
 
 
-        ImGui::Begin("Performance");
-
-        ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
-
-
-        ImGui::Text("Frame time: %.3f ms", 1000.0f / ImGui::GetIO().Framerate);
-
-        ImGui::End();
-
-        ImGui::Render();
-
-        onRender();
+        m_gpuProfiler->startFrame();
+        {
+            onRender();
+        }
+        m_gpuProfiler->endFrame();
 
 
-        ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+        GuiManager::get().setGpuTime(m_gpuProfiler->getLastFrameTimeMs());
+        GuiManager::get().setCpuTime(lastFrameCpuTime);
+
+
+        GuiManager::get().render();
+
+
+        GuiManager::get().endFrame();
+
+        lastFrameCpuTime = m_cpuTimer.stop();
+
+
         glfwSwapBuffers(m_window);
         glfwPollEvents();
     }

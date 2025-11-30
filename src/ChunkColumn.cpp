@@ -7,6 +7,7 @@
 #include <iostream>
 #include <World.hpp>
 
+#include "GuiManager.hpp"
 #include "WorldGenerator.hpp"
 
 
@@ -145,6 +146,8 @@ void ChunkColumn::generateMesh() {
         m_solidMesh = std::move(tempSolidMesh);
         m_transparentMesh = std::move(tempTransparentMesh);
     }
+
+
     m_meshReadyForUpload = true;
     m_isGeneratingMesh = false;
     m_isMeshDirty = false;

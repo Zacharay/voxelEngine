@@ -1,8 +1,7 @@
 #include  "Application.hpp"
 
 #include <iostream>
-#include <Timer.hpp>
-#include "Camera.hpp"
+#include "GuiManager.hpp"
 
 
 static void mouse_callback(GLFWwindow* window, double xPos, double yPos) {
@@ -22,6 +21,8 @@ Application::Application() : Window(){
     glfwSetInputMode(m_window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetWindowUserPointer(m_window, this);
     glfwSetCursorPosCallback(m_window, mouse_callback);
+
+
 }
 
 void Application::onMouseMovement(const float xPos,const float yPos) {
@@ -56,9 +57,9 @@ void Application::onRender() {
     m_meshRenderer->setViewMatrix(m_playerController->getViewMatrix());
 
     m_meshRenderer->renderSkybox();
-
     m_meshRenderer->renderSolidChunks(chunks);
     m_meshRenderer->renderTransparentChunks(chunks);
+
 
 
 }

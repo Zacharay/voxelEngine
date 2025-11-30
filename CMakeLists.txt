@@ -1,7 +1,6 @@
 cmake_minimum_required(VERSION 3.10)
 project(voxelEngine)
 
-# Set C++ standard
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
@@ -24,7 +23,10 @@ add_executable(voxelEngine ${SOURCES}
         include/PlayerController.hpp
         src/PlayerController.cpp
         include/BlockTypes.hpp
-        src/ThreadPool.cpp)
+        src/ThreadPool.cpp
+        include/GuiManager.hpp
+        src/GuiManager.cpp
+        include/GpuProfiler.hpp)
 
 add_custom_command(
         TARGET voxelEngine POST_BUILD

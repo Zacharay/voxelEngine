@@ -2,10 +2,13 @@
 
 #include <ios>
 
+#include "GuiManager.hpp"
+
 
 PlayerController::PlayerController(glm::vec3 startPos):m_selectedBlock(BlockType::Air),m_mouseInteractionTimer(0) {
     m_camera = std::make_unique<Camera>(startPos,glm::vec3(0.0f, 0.0f, -1.0f),glm::vec3(0.0f,1.0f,0.0f));
 
+    GuiManager::get().setSelectedBlock(BlockUtils::getBlockName(BlockType::Air));
 }
 void PlayerController::handleMouseMovement(const float xOffset,const float yOffset) {
     m_camera->processMouseInput(xOffset, yOffset);
@@ -72,10 +75,12 @@ void PlayerController::handleMouseInteraction(GLFWwindow *window, World &world) 
             world.setBlockAt(placePos, m_selectedBlock);
             m_mouseInteractionTimer = PLACE_COOLDOWN;
         }
+        //select block
         else {
-
             m_selectedBlock = ray.blockType;
             m_mouseInteractionTimer = SELECT_COOLDOWN;
+
+            GuiManager::get().setSelectedBlock(BlockUtils::getBlockName(m_selectedBlock));
         }
     }
 

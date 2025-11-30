@@ -24,8 +24,9 @@ void WorldGenerator::buildOakTree(ChunkColumn& chunkColumn,int localX,int yStart
 
     for(int i=0;i<2;i++) {
         const int worldY = yStart+TREE_LEAVES_START_POSITION+i;
-        for(int x=localX - 2 ; x<=localX + 2 ; x++) {
-            for(int z=localZ - 2 ; z<=localZ + 2 ; z++) {
+        for(int z=localZ - 2 ; z<=localZ + 2 ; z++) {
+            for(int x=localX - 2 ; x<=localX + 2 ; x++) {
+
                 //skip trunk
                 if(z==localZ && x==localX)continue;
 
@@ -35,9 +36,9 @@ void WorldGenerator::buildOakTree(ChunkColumn& chunkColumn,int localX,int yStart
         }
     }
 
-
+    for(int z=localZ - 1 ; z<=localZ + 1 ; z++) {
     for(int x=localX - 1 ; x<=localX + 1 ; x++) {
-        for(int z=localZ - 1 ; z<=localZ + 1 ; z++) {
+
             const int worldY = yStart+TREE_LEAVES_START_POSITION+2;
             if(x>=0&&z>=0&&x<Config::chunkSize &&z<Config::chunkSize) {
                 chunkColumn.setBlockAt(x,worldY,z,BlockType::OAK_LEAVES);

@@ -1,5 +1,6 @@
 #pragma once
 #include "Camera.hpp"
+#include "GpuProfiler.hpp"
 #include "Window.hpp"
 #include "World.hpp"
 #include "MeshRenderer.hpp"
@@ -20,4 +21,5 @@ private:
 
     double m_lastFrame ;
     void processInput(double deltaTime);
+
 };

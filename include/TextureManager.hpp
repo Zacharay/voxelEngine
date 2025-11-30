@@ -3,86 +3,61 @@
 #include "Chunk.hpp"
 #include "WorldGenerator.hpp"
 
-
 namespace TextureManager {
-    inline void getTexturePosition(int &tx,int &ty,BlockType bType,FaceDirection fDir) {
-        switch (bType) {
-            case BlockType::Grass:
-                ty= 0;
-                if(fDir == FaceDirection::Top ) {
-                    tx = 0;
-                }
-                else if(fDir == FaceDirection::Bottom ) {
-                    tx = 2;
-                }
-                else {
-                    tx = 1;
-                }
-            break;
-            case BlockType::Stone:
-                tx = 4;
-                ty = 0;
-            break;
-            case BlockType::Sand:
-                ty = 0;
-                tx = 9;
-            break;
-            case BlockType::Water:
-                ty = 0;
-                tx = 8;
-            break;
-            case BlockType::OAK_LOG:
-                if(fDir == FaceDirection::Top || fDir == FaceDirection::Bottom ) {
-                    tx = 5;
-                }
-                else {
-                    tx = 6;
-                }
-                ty = 0;
 
-                break;
-            case BlockType::OAK_LEAVES:
-                ty = 0;
-                tx = 7;
-                break;
-            case BlockType::OAK_PLANKS:
-                ty =0;
-                tx = 17;
-            break;
-            case BlockType::Snow:
-                ty =0;
-                tx = 10;
-            break;
-            case BlockType::Spruce_Log:
-                if(fDir == FaceDirection::Top || fDir == FaceDirection::Bottom ) {
-                    tx = 11;
-                }
-                else {
-                    tx = 12;
-                }
-                ty = 0;
+    namespace detail {
+        struct TextureCoord {
+            uint8_t u, v;
+        };
 
-                break;
-            case BlockType::Spruce_Leaves:
-                ty =0;
-                tx = 13;
-                break;
-            case BlockType::Cactus:
-                ty= 0;
-                if(fDir == FaceDirection::Top ) {
-                    tx = 15;
-
-                }
-                else if(fDir == FaceDirection::Bottom ) {
-                    tx = 14;
-                }
-                else {
-                    tx = 16;
-                }
-                break;
-            default:
-                break;
+        constexpr std::array<TextureCoord, 6> allFaces(uint8_t tx, uint8_t ty) {
+            return { TextureCoord{tx, ty}, {tx, ty}, {tx, ty}, {tx, ty}, {tx, ty}, {tx, ty} };
         }
+
+        constexpr std::array<TextureCoord, 6> topBottomSide(uint8_t topX, uint8_t topY,
+                                                            uint8_t bottomX, uint8_t bottomY,
+                                                            uint8_t sideX, uint8_t sideY) {
+            return {
+                TextureCoord{sideX, sideY}, TextureCoord{sideX, sideY},
+                TextureCoord{sideX, sideY}, TextureCoord{sideX, sideY},
+                TextureCoord{topX, topY},   TextureCoord{bottomX, bottomY}
+            };
+        }
+
+
+        constexpr size_t TABLE_SIZE = static_cast<size_t>(BlockType::BlockTypeCount);
+
+        inline constexpr auto textureTable = []() {
+            std::array<std::array<TextureCoord, 6>, TABLE_SIZE> t{};
+
+            for (auto& block : t) block = allFaces(0, 0);
+
+
+            auto Set = [&](BlockType type, const std::array<TextureCoord, 6>& faces) {
+                t[static_cast<size_t>(type)] = faces;
+            };
+
+            Set(BlockType::Water,                allFaces(8, 0));
+            Set(BlockType::Stone,                allFaces(4, 0));
+            Set(BlockType::Sand,                 allFaces(9, 0));
+            Set(BlockType::Grass,           topBottomSide(0, 0, 2, 0, 1, 0));
+            Set(BlockType::OAK_LOG,         topBottomSide(5, 0, 5, 0, 6, 0));
+            Set(BlockType::Cactus,          topBottomSide(15, 0, 14, 0, 16, 0));
+            Set(BlockType::OAK_LEAVES,          allFaces(7, 0));
+            Set(BlockType::OAK_PLANKS,          allFaces(17, 0));
+            Set(BlockType::Snow,                allFaces(10, 0));
+            Set(BlockType::Spruce_Log,      topBottomSide(11, 0, 11, 0, 12, 0));
+            Set(BlockType::Spruce_Leaves,       allFaces(13, 0));
+
+            return t;
+        }();
     }
 
+
+    inline void getTexturePosition(int &tx, int &ty, BlockType blockType, FaceDirection faceDir) {
+        const auto& coord = detail::textureTable[static_cast<size_t>(blockType)][static_cast<size_t>(faceDir)];
+
+        tx = coord.u;
+        ty = coord.v;
+    }
 }

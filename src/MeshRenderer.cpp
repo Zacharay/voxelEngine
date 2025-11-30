@@ -6,6 +6,7 @@
 #include <World.hpp>
 
 #include "ChunkColumn.hpp"
+#include "GuiManager.hpp"
 #include "stb_image.h"
 
 const std::array<std::string,6>skyboxFilepathFaces ={
@@ -155,7 +156,7 @@ void MeshRenderer::renderSolidChunks(const ChunkMap &chunks)const {
 
     m_solidShader->setMat4(m_projectionMatrix,"projection");
     m_solidShader->setMat4(m_viewMatrix,"view");
-    unsigned int faceCountCounter = 0;
+    unsigned int totalFaces = 0;
     for(auto &chunk : chunks) {
         ChunkColumn* column = chunk.second.get();
 
@@ -170,14 +171,14 @@ void MeshRenderer::renderSolidChunks(const ChunkMap &chunks)const {
         m_solidShader->setMat4(modelMatrix, "model");
 
         chunk.second->bindSolidMesh();
+
+        unsigned int facesCount = chunk.second->getSolidMeshSize();
         glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(chunk.second->getSolidMeshSize()) * 6 );
-        faceCountCounter +=  chunk.second->getSolidMeshSize() ;
-
+        totalFaces += facesCount;
 
     }
-    if(Config::showFaceCount) {
-        std::cout<<faceCountCounter<<std::endl;
-    }
+
+    GuiManager::get().addVertexCount(totalFaces*6);
 
 }
 void MeshRenderer::renderTransparentChunks(const ChunkMap &chunks)const {
@@ -197,6 +198,8 @@ void MeshRenderer::renderTransparentChunks(const ChunkMap &chunks)const {
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
     glDepthMask(GL_FALSE);
 
+    unsigned totalFaces = 0;
+
     for(auto &chunk : chunks) {
         if(!chunk.second->isMeshDirty()) {
             ChunkColumn* column = chunk.second.get();
@@ -212,11 +215,14 @@ void MeshRenderer::renderTransparentChunks(const ChunkMap &chunks)const {
              m_transparentShader->setMat4(modelMatrix, "model");
 
             chunk.second->bindTransparentMesh();
-            glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(chunk.second->getTransparentMeshSize()) * 6 );
+            unsigned int facesCount = chunk.second->getTransparentMeshSize();
+            glDrawArrays(GL_TRIANGLES, 0, static_cast<GLsizei>(facesCount) * 6 );
+
+            totalFaces += facesCount;
         }
 
     }
-
+    GuiManager::get().addVertexCount(totalFaces*6);
     glDepthMask(GL_TRUE);
     glDisable(GL_BLEND);
 }

@@ -15,7 +15,6 @@ enum class BiomeType :unsigned char{
 };
 
 
-
 namespace WorldGenerator {
     inline BlockType generateBlock(int blockHeight,BiomeType biome) {
         BlockType block;

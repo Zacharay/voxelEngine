@@ -129,7 +129,6 @@ void World::processChunkMeshes() {
     const int MAX_UPLOADS_PER_FRAME =1000;
     int uploadedCount = 0;
 
-
     std::lock_guard<std::mutex> lock(m_chunkMapMutex);
 
     for (auto& pair : m_chunks) {
