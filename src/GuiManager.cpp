@@ -78,7 +78,7 @@ void GuiManager::render() {
         ImGui::Spacing();
         ImGui::Separator();
 
-        //SCENE ---
+        //SCENE
         ImGui::TextColored(ImVec4(0.6f, 0.6f, 1.0f, 1.0f), "GEOMETRY");
 
         ImGui::Text("Vertices:  %zu", (size_t)m_vertexCount);

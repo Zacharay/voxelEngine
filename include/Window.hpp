@@ -7,14 +7,6 @@
 #include "GpuProfiler.hpp"
 
 class Window  {
-private:
-    void calculateFps();
-    int frameCount;
-    double previousTime;
-
-    CpuTimer m_cpuTimer;
-    std::unique_ptr<GpuProfiler> m_gpuProfiler;
-
 public:
     Window();
     void run();
@@ -25,5 +17,10 @@ protected:
     void log(const std::string &message);
     virtual void onUpdate()=0;
     virtual void onRender()=0;
+
+private:
+
+    CpuTimer m_cpuTimer;
+    std::unique_ptr<GpuProfiler> m_gpuProfiler;
 
 };

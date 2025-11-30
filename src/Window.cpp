@@ -4,9 +4,7 @@
 #include <fstream>
 
 #include "GuiManager.hpp"
-#include "imgui/imgui.h"
-#include "imgui/imgui_impl_glfw.h"
-#include "imgui/imgui_impl_opengl3.h"
+
 
 Window::Window() : m_window(nullptr) {
 
@@ -61,25 +59,6 @@ void Window::log(const std::string& message) {
         logFile.flush();
     }
 }
-
-
-void Window::calculateFps() {
-    double currentTime = glfwGetTime();
-    double elapsedTime = currentTime - previousTime;
-    frameCount++;
-
-    if (elapsedTime >= 1.0) { // If a second has passed
-        double fps = static_cast<double>(frameCount) / elapsedTime;
-        log("FPS: " + std::to_string(fps) + '\n');
-
-
-
-        // Reset for the next calculation
-        previousTime = currentTime;
-        frameCount = 0;
-    }
-}
-
 
 
 void Window::run()  {
