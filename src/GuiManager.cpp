@@ -97,12 +97,12 @@ void GuiManager::render() {
         ImGui::TextColored(ImVec4(0.6f, 0.6f, 1.0f, 1.0f), "HARDWARE");
 
         ImGui::PushTextWrapPos(ImGui::GetWindowSize().x - 10.0f);
-        ImGui::TextDisabled("%s", m_rendererName.c_str());
+        ImGui::TextDisabled("%.*s", static_cast<int>(m_rendererName.size()), m_rendererName.data());
         ImGui::PopTextWrapPos();
 
 
         ImGui::SetWindowFontScale(0.8f);
-        ImGui::TextDisabled("Driver: %s", m_driverVersion.c_str());
+        ImGui::TextDisabled("Driver: %.*s", static_cast<int>(m_driverVersion.size()), m_driverVersion.data());
         ImGui::SetWindowFontScale(1.0f);
     }
     ImGui::End();

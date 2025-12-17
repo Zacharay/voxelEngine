@@ -36,9 +36,9 @@ public:
     void setSelectedBlock(const std::string_view name) { m_selectedBlockName = name; }
     void addVertexCount(size_t count) { m_vertexCount += count; }
 
-    void setGpuRenderer(const std::string& name){m_rendererName = name; };
-    void setGpuVendor(const std::string& name){m_vendorName = name; };
-    void setDriverVersion(const std::string& name){m_driverVersion = name; };
+    void setGpuRenderer(const std::string_view name){m_rendererName = name; };
+    void setGpuVendor(const std::string_view name){m_vendorName = name; };
+    void setDriverVersion(const std::string_view name){m_driverVersion = name; };
 
 private:
     GuiManager() = default;
@@ -51,8 +51,8 @@ private:
     float m_gpuTime = 0.0f;
     size_t m_vertexCount = 0;
 
-    std::string m_rendererName = "Unknown";
-    std::string m_vendorName = "Unknown";
-    std::string m_driverVersion = "Unknown";
+    std::string_view m_rendererName = "Unknown";
+    std::string_view m_vendorName = "Unknown";
+    std::string_view m_driverVersion = "Unknown";
     std::string_view m_selectedBlockName = "None";
 };

@@ -6,14 +6,14 @@
 class GpuProfiler {
 public:
     GpuProfiler() {
-        // 1. Inicjalizacja Query (Timer)
+
         glGenQueries(2, m_queries);
         glBeginQuery(GL_TIME_ELAPSED, m_queries[0]);
         glEndQuery(GL_TIME_ELAPSED);
         glBeginQuery(GL_TIME_ELAPSED, m_queries[1]);
         glEndQuery(GL_TIME_ELAPSED);
 
-        // 2. Pobranie Static Info (Raz przy starcie)
+
         const char* vendor = reinterpret_cast<const char*>(glGetString(GL_VENDOR));
         const char* renderer = reinterpret_cast<const char*>(glGetString(GL_RENDERER));
         const char* version = reinterpret_cast<const char*>(glGetString(GL_VERSION));
@@ -22,17 +22,13 @@ public:
         m_gpuRenderer = renderer ? renderer : "Unknown";
         m_driverVersion = version ? version : "Unknown";
 
-        // (Opcjonalnie) Pobranie limitów pamięci VRAM (Intel to lubi!)
-        // GLint vram = 0;
-        // glGetIntegerv(0x9048, &vram); // GL_GPU_MEMORY_INFO_TOTAL_AVAILABLE_MEMORY_NVX (tylko Nvidia/niektóre sterowniki)
-        // Ale bezpieczniej zostać przy podstawach.
     }
 
     ~GpuProfiler() {
         glDeleteQueries(2, m_queries);
     }
 
-    // --- Sekcja Dynamiczna (Timer) ---
+
     void startFrame() {
         glBeginQuery(GL_TIME_ELAPSED, m_queries[m_currentQuery]);
     }
@@ -48,10 +44,10 @@ public:
         return static_cast<float>(timeNs) / 1000000.0f;
     }
 
-    // --- Sekcja Statyczna (Info) ---
-    const std::string& getVendor() const { return m_gpuVendor; }
-    const std::string& getRenderer() const { return m_gpuRenderer; }
-    const std::string& getVersion() const { return m_driverVersion; }
+
+    [[nodiscard]] std::string_view  getVendor() const { return m_gpuVendor; }
+    [[nodiscard]] std::string_view  getRenderer() const { return m_gpuRenderer; }
+    [[nodiscard]] std::string_view  getVersion() const { return m_driverVersion; }
 
 private:
     // Timer Data
@@ -59,7 +55,7 @@ private:
     int m_currentQuery = 0;
 
     // Static Info Data
-    std::string m_gpuVendor;
-    std::string m_gpuRenderer;
-    std::string m_driverVersion;
+    std::string_view m_gpuVendor;
+    std::string_view m_gpuRenderer;
+    std::string_view m_driverVersion;
 };
