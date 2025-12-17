@@ -50,11 +50,11 @@ public:
     [[nodiscard]] std::string_view  getVersion() const { return m_driverVersion; }
 
 private:
-    // Timer Data
+
     unsigned int m_queries[2];
     int m_currentQuery = 0;
 
-    // Static Info Data
+
     std::string_view m_gpuVendor;
     std::string_view m_gpuRenderer;
     std::string_view m_driverVersion;
